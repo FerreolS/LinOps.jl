@@ -1,0 +1,10 @@
+name = "LinOps"
+uuid = "12e01e97-5e40-5c5d-ad16-3cd76309c2d9"
+authors = ["Ferreol Soulez <ferreol.soulez@univ-lyon1.fr>"]
+version = "0.1.0"
+
+[workspace]
+projects = ["test", "docs"]
+
+[compat]
+julia = "1.10"
