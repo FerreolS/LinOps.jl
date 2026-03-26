@@ -1,6 +1,6 @@
 using LinOps
+using LinOps: AbstractDomain, CoordinateSpace
 using Test
-
-@testset "LinOps.jl" begin
-    @test LinOps.hello_world() == "Hello, World!"
+@testset "LinOps" begin
+    include("domain_tests.jl")
 end

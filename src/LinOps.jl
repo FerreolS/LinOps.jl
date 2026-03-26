@@ -1,11 +1,15 @@
 module LinOps
 
-"""
-    hi = hello_world()
-A simple function to return "Hello, World!"
-"""
-function hello_world()
-    return "Hello, World!"
-end
+import ChainRulesCore,
+    Adapt,
+    KernelAbstractions,
+    ArrayTools,
+    StaticArrays,
+    LinearAlgebra
+
+
+include("Domains.jl")
+include("LinOp.jl")
+
 
 end
