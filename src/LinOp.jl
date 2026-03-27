@@ -9,8 +9,8 @@ outputsize(A::LinOp) = size(outputspace(A))
 Base.size(A::LinOp) = (outputsize(A), inputsize(A))
 
 Base.eltype(::LinOp) = Bool
-outputype(A::LinOp, x) = typeof(oneunit(eltype(A)) * oneunit(x))
-outputype(A::UniformScaling, x) = typeof(oneunit(eltype(A)) * oneunit(x))
+outputype(A::LinOp, x) = typeof(oneunit(eltype(A)) * oneunit(eltype(x)))
+outputype(A::UniformScaling, x) = typeof(oneunit(eltype(A)) * oneunit(eltype(x)))
 
 isendomorphism(A::LinOp) = inputspace(A) === outputspace(A)
 isendomorphism(::UniformScaling) = true

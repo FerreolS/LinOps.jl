@@ -148,6 +148,10 @@ end
     r = rand(sp)
     @test size(r) == (2, 3)
     @test eltype(r) == Float64
+
+    r_int = rand(Int, sp)
+    @test size(r_int) == (2, 3)
+    @test eltype(r_int) == Int
 end
 
 @testset "Domains - Similar" begin
@@ -170,6 +174,10 @@ end
     F = similar(E, sp)
     @test size(F) == (3, 4)
     @test eltype(F) == typeof(1)
+
+    G = similar(E, Float32, sp)
+    @test size(G) == (3, 4)
+    @test eltype(G) == Float32
 end
 
 @testset "Domains - Edge Cases" begin

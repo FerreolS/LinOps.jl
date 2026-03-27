@@ -3,15 +3,25 @@ using LinOps: LinOp, LinOpDiag, CoordinateSpace, inputspace, outputspace, inputs
 
 @testset "LinOpDiag - Basic LinOp properties" begin
     d = [2.0 3.0; 4.0 5.0]
+    x = ones(2, 2)
     A = LinOpDiag(d)
+    Aadj = A'
 
     @test A isa LinOp
     @test inputspace(A) == CoordinateSpace((2, 2))
     @test outputspace(A) == inputspace(A)
     @test inputsize(A) == (2, 2)
     @test outputsize(A) == (2, 2)
+    @test size(A) == ((2, 2), (2, 2))
     @test isendomorphism(A)
+    @test isendomorphism(I)
     @test eltype(A) == Float64
+    @test LinOps.outputype(A, x) == Float64
+    @test LinOps.outputype(I, x) == Float64
+
+    @test inputspace(Aadj) == outputspace(A)
+    @test outputspace(Aadj) == inputspace(A)
+    @test parent(Aadj) === A
 end
 
 @testset "LinOpDiag - Apply via * and call" begin
@@ -103,6 +113,14 @@ end
 
     @test (A / A) === I
     @test (A \ A) === I
+
+    D = A / B
+    @test D isa LinOpDiag
+    @test D * x ≈ ((d1 ./ d2) .* x)
+
+    L = A \ B
+    @test L isa LinOpDiag
+    @test L * x ≈ ((d2 ./ d1) .* x)
 end
 
 @testset "LinOpDiag - Power identity behavior" begin
