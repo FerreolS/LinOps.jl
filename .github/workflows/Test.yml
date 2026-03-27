@@ -47,5 +47,5 @@ jobs:
         with:
           version: "1"
       - uses: julia-actions/cache@v3
-      - run: julia --project=test --color=yes -e 'using Pkg; Pkg.add("Aqua")'
+      - run: julia --project=test --color=yes -e 'using Pkg; Pkg.instantiate()'
       - run: julia --project=test --color=yes -e 'using Aqua, LinOps; Aqua.test_all(LinOps)'

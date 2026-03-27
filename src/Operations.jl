@@ -42,6 +42,10 @@ function LinOpCompose(A::UniformScaling, B::LinOp)
 end
 
 
+function LinOpCompose(A::LinOpCompose, B::LinOpCompose{I, O, UniformScaling}) where {I, O}
+    return A.left * (A.right * B)
+end
+
 function LinOpCompose(A::LinOpCompose, B::LinOp)
     return A.left * (A.right * B)
 end
