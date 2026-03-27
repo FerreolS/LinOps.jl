@@ -52,6 +52,22 @@ end
 
     # Beyond dimensions returns OneTo(1)
     @test axes(sp, 4) == Base.OneTo(1)
+
+    # Base-mirroring behavior for invalid dimensions
+    @test_throws BoundsError axes(sp, 0)
+    @test_throws BoundsError axes(sp, -1)
+end
+
+@testset "Domains - Base size/axes mirroring" begin
+    sp = CoordinateSpace((2, 3))
+
+    # Base.size(array, d<=0) throws ErrorException("arraysize: dimension out of range")
+    @test_throws ErrorException size(sp, 0)
+    @test_throws ErrorException size(sp, -1)
+
+    # Base.axes(array, d<=0) throws BoundsError
+    @test_throws BoundsError axes(sp, 0)
+    @test_throws BoundsError axes(sp, -1)
 end
 
 @testset "Domains - Length and Total Size" begin

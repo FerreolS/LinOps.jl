@@ -15,8 +15,10 @@ CoordinateSpace() = CoordinateSpace(())
 CoordinateSpace(sp::CoordinateSpace) = sp
 
 Base.size(sp::CoordinateSpace) = sp.size
-Base.size(sp::CoordinateSpace{N}, d::Int) where {N} = d <= N ? size(sp)[d] : 1
-Base.axes(A::CoordinateSpace{N}, d::Int) where {N} = d <= N ? axes(A)[d] : Base.OneTo(1)
+Base.size(sp::CoordinateSpace{N}, d::Int) where {N} =
+    d < 1 ? throw(ErrorException("arraysize: dimension out of range")) : (d <= N ? size(sp)[d] : 1)
+Base.axes(A::CoordinateSpace{N}, d::Int) where {N} =
+    d < 1 ? throw(BoundsError(axes(A), d)) : (d <= N ? axes(A)[d] : Base.OneTo(1))
 
 
 Base.length(sp::CoordinateSpace) = prod(sp.size)

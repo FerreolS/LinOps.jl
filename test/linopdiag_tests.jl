@@ -1,4 +1,4 @@
-using LinearAlgebra: mul!
+using LinearAlgebra: I, UniformScaling, mul!
 using LinOps: LinOp, LinOpDiag, CoordinateSpace, inputspace, outputspace, inputsize, outputsize, isendomorphism
 
 @testset "LinOpDiag - Basic LinOp properties" begin
@@ -70,12 +70,39 @@ end
     @test S isa LinOpDiag
     @test S * x == (d1 .+ d2) .* x
 
+    S3 = 3 + A
+    @test S3 isa LinOpDiag
+    @test S3 * x == (3 .+ d1) .* x
+
+    C3 = 3 * A
+    @test C3 isa LinOpDiag
+    @test C3 * x == (3 .* d1) .* x
+
+    C3r = A * 3
+    @test C3r isa LinOpDiag
+    @test C3r * x == (3 .* d1) .* x
+
+    S3r = A + 3
+    @test S3r isa LinOpDiag
+    @test S3r * x == (3 .+ d1) .* x
+
+    C0 = 0 * A
+    @test C0 isa LinOpDiag
+    @test C0 * x == zero.(x)
+
+    Cu = UniformScaling(3) * A
+    @test Cu isa LinOpDiag
+    @test Cu * x == (3 .* d1) .* x
+
     @test (A^2) isa LinOpDiag
     @test (A^2) * x == (d1 .^ 2) .* x
 
     Ainv = inv(A)
     @test Ainv isa LinOpDiag
     @test Ainv * x ≈ (1.0 ./ d1) .* x
+
+    @test (A / A) === I
+    @test (A \ A) === I
 end
 
 @testset "LinOpDiag - Power identity behavior" begin

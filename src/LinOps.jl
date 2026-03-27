@@ -1,11 +1,17 @@
 module LinOps
 
-import LinearAlgebra: mul!, UniformScaling
+using LinearAlgebra
+import LinearAlgebra: mul!
 
 export LinOp, LinOpDiag
 
-public CoordinateSpace, inputspace, outputspace, inputsize, outputsize, isendomorphism
-
+VERSION >= v"1.11.0-DEV.469" && eval(
+    Meta.parse(
+        string(
+            "public CoordinateSpace, inputsize, inputspace, isendomorphism, outputsize, outputspace "
+        )
+    )
+)
 include("Domains.jl")
 include("LinOp.jl")
 include("Operations.jl")

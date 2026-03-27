@@ -18,11 +18,13 @@ apply_!(y, A::LinOpDiag, x) = @. y = A.diag * x
 apply_adjoint_!(y, A::LinOpDiag, x) = @. y = conj.(A.diag) * x
 
 LinOpCompose(A::LinOpDiag, B::LinOpDiag) = LinOpDiag(@. A.diag * B.diag)
-LinOpCompose(A::Union{Number, UniformScaling}, B::LinOpDiag) = LinOpDiag(@. A * B.diag)
+LinOpCompose(A::Number, B::LinOpDiag) = LinOpDiag(@. A * B.diag)
+LinOpCompose(A::UniformScaling, B::LinOpDiag) = LinOpDiag(A * B.diag)
 
 
 Base.inv(A::LinOpDiag) = LinOpDiag(@. 1 / A.diag)
 Base.:^(A::LinOpDiag, n::Int) = LinOpDiag(@. A.diag^n)
 
 LinOpSum(A::LinOpDiag, B::LinOpDiag) = LinOpDiag(@. A.diag + B.diag)
-LinOpSum(A::Union{Number, UniformScaling}, B::LinOpDiag) = LinOpDiag(@. A + B.diag)
+LinOpSum(A::Number, B::LinOpDiag) = LinOpDiag(@. A + B.diag)
+LinOpSum(A::UniformScaling, B::LinOpDiag) = LinOpDiag(A + B.diag)

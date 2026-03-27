@@ -92,26 +92,35 @@ Base.inv(A::LinOpCompose) = Base.inv(A.right) * Base.inv(A.left)
 Base.:^(A::LinOp, n::Int) = n > 0 ? A^(n - 1) * A : (n == 0 ? LinearAlgebra.I : Base.inv(A)^(-n))
 
 
-function Base.:/(A::T, B::LinOp) where {T}
+function Base.:/(A, B::LinOp)
+    return A * inv(B)
+end
+
+function Base.:/(A::LinOp, B::LinOp)
     if A === B
         return LinearAlgebra.I
     end
     return A * inv(B)
-end
-function Base.:\(B::LinOp, A::T) where {T}
-    if A === B
-        return LinearAlgebra.I
-    end
-    return inv(B) * A
 end
 
 function Base.:/(A::LinOp, B)
     return A * inv(B)
 end
+
 function Base.:\(A, B::LinOp)
     return inv(A) * B
 end
 
+function Base.:\(A::LinOp, B)
+    return inv(A) * B
+end
+
+function Base.:\(A::LinOp, B::LinOp)
+    if A === B
+        return LinearAlgebra.I
+    end
+    return inv(A) * B
+end
 
 ## Sum
 Base.:+(A, B::LinOp) = LinOpSum(A, B)
