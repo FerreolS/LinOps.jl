@@ -1,5 +1,7 @@
 [deps]
+Adapt = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
+FixedSizeArrays = "3821ddf9-e5b5-40d5-8e25-6813ab96b5e2"
 LinOps = "12e01e97-5e40-5c5d-ad16-3cd76309c2d9"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 TOML = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
