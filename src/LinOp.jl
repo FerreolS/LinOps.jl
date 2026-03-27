@@ -15,6 +15,13 @@ outputype(A::UniformScaling, x) = typeof(oneunit(eltype(A)) * oneunit(eltype(x))
 isendomorphism(A::LinOp) = inputspace(A) === outputspace(A)
 isendomorphism(::UniformScaling) = true
 
+function Base.:(==)(a::LinOp, b::LinOp)
+    if typeof(a) != typeof(b)
+        return false
+    end
+    return all(getfield(a, f) == getfield(b, f) for f in fieldnames(typeof(b)))
+end
+
 function assert_applicable(A::LinOp, x)
     return x ∈ inputspace(A) || throw(ArgumentError("The input size (size $(size(x)) ) must belong to the space $(inputspace(A))"))
 end

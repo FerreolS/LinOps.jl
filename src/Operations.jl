@@ -31,9 +31,11 @@ function LinOpCompose(A::Number, B::LinOp)
     return LinOpCompose(inputspace(B), outputspace(B), UniformScaling(A), B)
 end
 
+LinOpCompose(A::LinOp, B::UniformScaling) = LinOpCompose(B, A)
+
 function LinOpCompose(A::UniformScaling, B::LinOp)
     if A == UniformScaling(0)
-        return false
+        return A
     end
     if A == UniformScaling(1)
         return B
@@ -57,7 +59,7 @@ end
 function LinOpCompose(A::UniformScaling, B::LinOpCompose{I, O, UniformScaling}) where {I, O}
     C = A * B.left
     if C == UniformScaling(0)
-        return false
+        return C
     end
     if C == UniformScaling(1)
         return B.right

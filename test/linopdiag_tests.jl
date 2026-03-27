@@ -8,6 +8,7 @@ using LinOps: LinOp, LinOpDiag, CoordinateSpace, inputspace, outputspace, inputs
     Aadj = A'
 
     @test A isa LinOp
+    @test isendomorphism(A) == true
     @test inputspace(A) == CoordinateSpace((2, 2))
     @test outputspace(A) == inputspace(A)
     @test inputsize(A) == (2, 2)
@@ -76,9 +77,25 @@ end
     @test C isa LinOpDiag
     @test C * x == (d1 .* d2) .* x
 
+    D = A ∘ B
+    @test D isa LinOpDiag
+    @test D * x == (d1 .* d2) .* x
+
+    E = I ∘ B
+    @test E isa LinOpDiag
+    @test E == B
+
+    E = B ∘ I
+    @test E isa LinOpDiag
+    @test E == B
+
     S = A + B
     @test S isa LinOpDiag
     @test S * x == (d1 .+ d2) .* x
+
+    S2 = I + B
+    @test S2 isa LinOpDiag
+    @test S2 * x == (1 .+ d2) .* x
 
     S3 = 3 + A
     @test S3 isa LinOpDiag
@@ -97,7 +114,7 @@ end
     @test S3r * x == (3 .+ d1) .* x
 
     C0 = 0 * A
-    @test C0 isa LinOpDiag
+    @test C0 == UniformScaling(0)
     @test C0 * x == zero.(x)
 
     Cu = UniformScaling(3) * A
