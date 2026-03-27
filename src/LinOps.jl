@@ -1,15 +1,14 @@
 module LinOps
 
-import ChainRulesCore,
-    Adapt,
-    KernelAbstractions,
-    ArrayTools,
-    StaticArrays,
-    LinearAlgebra
+import LinearAlgebra: mul!, UniformScaling
 
+export LinOp, LinOpDiag
+
+public CoordinateSpace, inputspace, outputspace, inputsize, outputsize, isendomorphism
 
 include("Domains.jl")
 include("LinOp.jl")
-
+include("Operations.jl")
+include("LinOpDiag.jl")
 
 end

@@ -11,7 +11,7 @@ end
  =#
 
 CoordinateSpace(sz::Int) = CoordinateSpace(Tuple(sz))
-CoordinateSpace{0}() = CoordinateSpace(())
+CoordinateSpace() = CoordinateSpace(())
 CoordinateSpace(sp::CoordinateSpace) = sp
 
 Base.size(sp::CoordinateSpace) = sp.size
@@ -37,3 +37,4 @@ Base.randn(sp::CoordinateSpace) = randn(size(sp))
 Base.randn(::Type{T}, sp::CoordinateSpace) where {T} = randn(T, size(sp))
 
 Base.similar(A::AbstractArray, sp::CoordinateSpace) = similar(A, size(sp))
+Base.similar(A::AbstractArray, ::Type{T}, sp::CoordinateSpace) where {T} = similar(A, T, size(sp))

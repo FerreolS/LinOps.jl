@@ -1,46 +1,104 @@
 abstract type LinOp{I, O} end
-inputspace(A::LinOp) = A.inputspace
-outputspace(A::LinOp) = A.outputspace
+
+
+inputspace(A::LinOp) = isabstracttype(A) ? CoordinateSpace() : A.inputspace
+outputspace(A::LinOp) = isabstracttype(A) ? CoordinateSpace() : A.outputspace
 
 inputsize(A::LinOp) = size(inputspace(A))
 outputsize(A::LinOp) = size(outputspace(A))
-isendomorphism(A::LinOp) = inputspace(A) === outputspace(A)
+Base.size(A::LinOp) = (outputsize(A), inputsize(A))
 
+Base.eltype(::LinOp) = Bool
+outputype(A::LinOp, x) = typeof(oneunit(eltype(A)) * oneunit(x))
+outputype(A::UniformScaling, x) = typeof(oneunit(eltype(A)) * oneunit(x))
+
+isendomorphism(A::LinOp) = inputspace(A) === outputspace(A)
+isendomorphism(::UniformScaling) = true
+
+function assert_applicable(A::LinOp, x)
+    return x ∈ inputspace(A) || throw(ArgumentError("The input size (size $(size(x)) ) must belong to the space $(inputspace(A))"))
+end
+
+function assert_applicable(A::LinOp, x, y)
+    x ∈ inputspace(A) || throw(ArgumentError("The input size (size $(size(x)) ) must belong to the space $(inputspace(A))"))
+    return y ∈ outputspace(A) || throw(ArgumentError("The output size (size $(size(y)) ) must belong to the space $(outputspace(A))"))
+end
+
+## Applying linear operators
 (A::LinOp)(v) = A * v
 
-
-Base.:+(A::LinOp, B::LinOp) = add(A, B)
-Base.:+(A::LinOp, B) = add(A, B)
-Base.:+(B, A::LinOp) = add(A, B)
-Base.:-(A::LinOp, B::LinOp) = add(A, -B)
-Base.:-(A::LinOp, B) = add(A, -B)
-Base.:-(A, B::LinOp) = add(A, -B)
-Base.:-(A::LinOp) = -1 * A
-
-Base.:*(A::LinOp, v) = apply(A, v)
-
-Base.:*(A::LinOp, B::LinOp) = compose(A, B)
-Base.:∘(A::LinOp, B::LinOp) = compose(A, B)
-Base.:^(A::LinOp, n::Int) = n > 0 ? compose(A, A^(n - 1)) : (n == 0 ? LinearAlgebra.I : inverse(A)^(-n))
-
-Base.inv(A::LinOp) = inverse(A)
-
-function Base.:/(A::T, B::LinOp) where {T}
-    if A === B
-        return LinearAlgebra.I
+function mul!(y, A::LinOp, x)
+    assert_applicable(A, x, y)
+    if applicable(apply_!, y, A, x)
+        return apply_!(y, A, x)
     end
-    return A * inv(B)
-end
-function Base.:\(B::LinOp, A::T) where {T}
-    if A === B
-        return LinearAlgebra.I
+    if applicable(apply_, A, x)
+        y .= apply_(A, x)
+        return y
     end
-    return inv(B) * A
+    throw(ArgumentError("Neither apply_ or apply_! are implemented for $(typeof(A))"))
 end
 
-function Base.:/(A::LinOp, B::Number)
-    return A * inv(B)
+function Base.:*(A::LinOp, x)
+    assert_applicable(A, x)
+    if applicable(apply_, A, x)
+        return apply_(A, x)
+    else
+        y = similar(x, outputype(A, x), outputspace(A))
+        if applicable(apply_!, y, A, x)
+            return apply_!(y, A, x)
+        end
+    end
+    throw(ArgumentError("Neither apply_ or apply_! are implemented for $(typeof(A))"))
 end
-function Base.:\(A::Number, B::LinOp)
-    return inv(A) * B
+
+
+## Adjoint
+
+struct LinOpAdjoint{I, O, A} <: LinOp{I, O}
+    parent::A
+    LinOpAdjoint(A::LinOp{O, I}) where {I, O} = new{I, O, typeof(A)}(A)
 end
+
+Base.adjoint(A::LinOp) = LinOpAdjoint(A)
+
+inputspace(A::LinOpAdjoint) = outputspace(parent(A))
+outputspace(A::LinOpAdjoint) = inputspace(parent(A))
+Base.parent(A::LinOpAdjoint) = A.parent
+
+LinOpAdjoint(A::LinOpAdjoint) = parent(A)
+Base.adjoint(A::LinOpAdjoint) = parent(A)
+
+function apply_!(y, A::LinOpAdjoint, x)
+    if applicable(apply_adjoint_!, y, parent(A), x)
+        return apply_adjoint_!(y, parent(A), x)
+    end
+    return y .= apply_(A, x)
+end
+
+
+function apply_(A::LinOpAdjoint, x)
+    if applicable(apply_adjoint_, parent(A), x)
+        return apply_adjoint_(parent(A), x)
+    else
+        y = similar(x, outputype(A, x), outputspace(A))
+        if applicable(apply_adjoint_!, y, parent(A), x)
+            return apply_adjoint_!(y, parent(A), x)
+        end
+    end
+    throw(ArgumentError("Neither apply_adjoint_ or apply_adjoint_! are implemented for $(typeof(A))"))
+    # return apply_adjoint_via_ad(parent(A), x) # a voir dans une extension DI
+end
+
+function apply_adjoint_!(y, A::LinOpAdjoint, x)
+    return apply_!(y, parent(A), x)
+end
+
+function apply_adjoint_(A::LinOpAdjoint, x)
+    return apply_(parent(A), x)
+end
+#=
+function apply_adjoint_via_ad(_, _)
+    throw(ArgumentError("DI must be loaded to computed adjoint via automatic differentiation"))
+end
+ =#

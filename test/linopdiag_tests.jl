@@ -1,0 +1,88 @@
+using LinearAlgebra: mul!
+using LinOps: LinOp, LinOpDiag, CoordinateSpace, inputspace, outputspace, inputsize, outputsize, isendomorphism
+
+@testset "LinOpDiag - Basic LinOp properties" begin
+    d = [2.0 3.0; 4.0 5.0]
+    A = LinOpDiag(d)
+
+    @test A isa LinOp
+    @test inputspace(A) == CoordinateSpace((2, 2))
+    @test outputspace(A) == inputspace(A)
+    @test inputsize(A) == (2, 2)
+    @test outputsize(A) == (2, 2)
+    @test isendomorphism(A)
+    @test eltype(A) == Float64
+end
+
+@testset "LinOpDiag - Apply via * and call" begin
+    d = [2.0 3.0; 4.0 5.0]
+    x = [1.0 2.0; 3.0 4.0]
+    A = LinOpDiag(d)
+
+    y = A * x
+    @test y == d .* x
+    @test A(x) == y
+
+    y2 = similar(x)
+    mul!(y2, A, x)
+    @test y2 == d .* x
+end
+
+@testset "LinOpDiag - Domain and codomain checks" begin
+    d = [1.0 2.0; 3.0 4.0]
+    A = LinOpDiag(d)
+
+    x_bad = zeros(2)
+    @test_throws ArgumentError A * x_bad
+
+    x = zeros(2, 2)
+    y_bad = zeros(2)
+    @test_throws ArgumentError mul!(y_bad, A, x)
+end
+
+@testset "LinOpDiag - Adjoint behavior" begin
+    d = ComplexF64[1 + 2im 2 - im; 3 + 0im 4 - 3im]
+    x = ComplexF64[2 - im 0 + 2im; -1 + 0im 1 - im]
+    A = LinOpDiag(d)
+
+    @test A' * x == conj.(d) .* x
+
+    y = similar(x)
+    mul!(y, A', x)
+    @test y == conj.(d) .* x
+
+    @test A'' === A
+end
+
+@testset "LinOpDiag - Operations from Operations.jl" begin
+    d1 = [2.0 3.0; 4.0 5.0]
+    d2 = [7.0 11.0; 13.0 17.0]
+    x = [1.0 2.0; 3.0 4.0]
+
+    A = LinOpDiag(d1)
+    B = LinOpDiag(d2)
+
+    C = A * B
+    @test C isa LinOpDiag
+    @test C * x == (d1 .* d2) .* x
+
+    S = A + B
+    @test S isa LinOpDiag
+    @test S * x == (d1 .+ d2) .* x
+
+    @test (A^2) isa LinOpDiag
+    @test (A^2) * x == (d1 .^ 2) .* x
+
+    Ainv = inv(A)
+    @test Ainv isa LinOpDiag
+    @test Ainv * x ≈ (1.0 ./ d1) .* x
+end
+
+@testset "LinOpDiag - Power identity behavior" begin
+    d = [2.0 4.0; 8.0 16.0]
+    x = [1.0 2.0; 3.0 4.0]
+    A = LinOpDiag(d)
+
+    @test (A^0) isa LinOpDiag
+    @test (A^0) * x == x
+end

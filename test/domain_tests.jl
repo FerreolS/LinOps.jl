@@ -10,7 +10,7 @@
     @test ndims(sp2) == 3
 
     # Zero-dimensional
-    sp0 = CoordinateSpace{0}()
+    sp0 = CoordinateSpace()
     @test size(sp0) == ()
     @test ndims(sp0) == 0
     @test length(sp0) == 1
@@ -64,7 +64,7 @@ end
     sp3 = CoordinateSpace(7)
     @test length(sp3) == 7
 
-    sp0 = CoordinateSpace{0}()
+    sp0 = CoordinateSpace()
     @test length(sp0) == 1
 end
 
