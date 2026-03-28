@@ -2,13 +2,14 @@ module LinOps
 
 import Adapt
 using LinearAlgebra
+using AbstractFFTs
 import LinearAlgebra: mul!
-export LinOp, LinOpDiag
+export LinOp, LinOpDiag, inputsize, mul!, outputsize
 
 VERSION >= v"1.11.0-DEV.469" && eval(
     Meta.parse(
         string(
-            "public CoordinateSpace, inputsize, inputspace, isendomorphism, outputsize, outputspace "
+            "public CoordinateSpace,  isendomorphism, outputspace, inputspace "
         )
     )
 )
@@ -16,5 +17,6 @@ include("Domains.jl")
 include("LinOp.jl")
 include("Operations.jl")
 include("LinOpDiag.jl")
+include("LinOpDFT.jl")
 
 end

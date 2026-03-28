@@ -18,7 +18,18 @@ apply_adjoint_(A::LinOpDiag, x) = return conj.(A.diag) .* x
 apply_!(y, A::LinOpDiag, x) = @. y = A.diag * x
 apply_adjoint_!(y, A::LinOpDiag, x) = @. y = conj.(A.diag) * x
 
-LinOpCompose(A::LinOpDiag, B::LinOpDiag) = LinOpDiag(@. A.diag * B.diag)
+# This make A'' == A and not === .Not sure if this is better than the default where A'' === A
+function LinOpAdjoint(A::LinOpDiag)
+    return LinOpDiag(conj.(A.diag))
+end
+
+function LinOpCompose(A::LinOpDiag, B::LinOpDiag)
+    outputspace(B) == inputspace(A) || throw(ArgumentError("The output space of the right operator should match the input space of the left operator"))
+    if A.diag == inv.(B.diag)
+        return I
+    end
+    return LinOpDiag(@. A.diag * B.diag)
+end
 
 function LinOpCompose(A::Number, B::LinOpDiag)
     if A == 0
@@ -44,6 +55,13 @@ end
 Base.inv(A::LinOpDiag) = LinOpDiag(@. 1 / A.diag)
 Base.:^(A::LinOpDiag, n::Int) = LinOpDiag(@. A.diag^n)
 
-LinOpSum(A::LinOpDiag, B::LinOpDiag) = LinOpDiag(@. A.diag + B.diag)
+function LinOpSum(A::LinOpDiag, B::LinOpDiag)
+    inputspace(B) == inputspace(A) || throw(ArgumentError("The input space of operators should match"))
+    if A.diag == -B.diag
+        return 0I
+    end
+    return LinOpDiag(@. A.diag + B.diag)
+end
+
 LinOpSum(A::Number, B::LinOpDiag) = LinOpDiag(@. A + B.diag)
 LinOpSum(A::UniformScaling, B::LinOpDiag) = LinOpDiag(@. A.λ + B.diag)

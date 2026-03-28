@@ -24,7 +24,6 @@ using LinOps: LinOp, LinOpDiag, CoordinateSpace, inputspace, outputspace, inputs
 
     @test inputspace(Aadj) == outputspace(A)
     @test outputspace(Aadj) == inputspace(A)
-    @test parent(Aadj) === A
 end
 
 @testset "LinOpDiag - Adapt structure" begin
@@ -76,7 +75,7 @@ end
     mul!(y, A', x)
     @test y == conj.(d) .* x
 
-    @test A'' === A
+    @test A'' == A
 end
 
 @testset "LinOpDiag - Operations from Operations.jl" begin
