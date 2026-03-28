@@ -1,7 +1,6 @@
 module LinOps
 
 import Adapt
-import Functors: fmap
 using LinearAlgebra
 import LinearAlgebra: mul!
 export LinOp, LinOpDiag

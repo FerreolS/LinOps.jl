@@ -107,17 +107,20 @@ end
 
 Adapt.adapt_structure(::Any, x::AbstractDomain) = x
 
-function Adapt.adapt_structure(to, A::T) where {T <: LinOp}
+#= function Adapt.adapt_structure(to, A::T) where {T <: LinOp}
     return fmap(Adapt.adapt(to), A; exclude = v -> (v isa AbstractDomain) || (v isa AbstractArray))
+end =#
+
+function Adapt.adapt_structure(to, A::T) where {T <: LinOp}
+    vals = map(fieldnames(T)) do f
+        v = getfield(A, f)
+        Adapt.adapt(to, v)
+    end
+    W = Base.typename(T).wrapper
+    return W(vals...)
 end
 #=
 function apply_adjoint_via_ad(_, _)
     throw(ArgumentError("DI must be loaded to computed adjoint via automatic differentiation"))
 end
- =#
-#=
-
-Adapt.adapt_storage(to, x::LinOp) = fmap(adapt(to), x)
-
-Adapt.adapt_storage(::Type{T}, x::LinOp) where {T <: Number} = adapt(AbstractArray{T}, x)
  =#
