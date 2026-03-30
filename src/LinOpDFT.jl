@@ -30,6 +30,36 @@ function Base.:*(left::LinOpDFT, right::LinOpAdjoint)
 end
 
 Base.eltype(::LinOpDFT) = ComplexF64
+#=
+const _SUPERSCRIPT_DIGITS = Dict(
+    '0' => '⁰',
+    '1' => '¹',
+    '2' => '²',
+    '3' => '³',
+    '4' => '⁴',
+    '5' => '⁵',
+    '6' => '⁶',
+    '7' => '⁷',
+    '8' => '⁸',
+    '9' => '⁹',
+)
+
+function _superscript_size(sz::NTuple{N, Int}) where {N}
+    parts = map(sz) do n
+        s = string(n)
+        return join(get(_SUPERSCRIPT_DIGITS, c, c) for c in s)
+    end
+    return join(parts, "ˣ")
+end
+
+function Base.summary(A::LinOpDFT)
+    return "LinOpDFT ℂ$(_superscript_size(inputsize(A))) ⟶ ℂ$(_superscript_size(outputsize(A)))"
+end
+ =#
+function Base.summary(A::LinOpDFT)
+    return "LinOpDFT  $(inputsize(A)) ⟶ $(outputsize(A))"
+end
+
 
 function Base.:*(left::LinOpAdjoint, right::LinOpDFT)
     if parent(left) === right

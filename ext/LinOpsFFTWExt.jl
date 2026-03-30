@@ -2,7 +2,7 @@ module LinOpsFFTWExt
 import FFTW
 import FFTW: fftwComplex, fftwReal, plan_brfft, plan_rfft
 import LinOps:
-    CoordinateSpace, LinOpDFT, apply_, apply_!, apply_adjoint_, apply_adjoint_!, outputype
+    CoordinateSpace, LinOpDFT, apply_, apply_!, apply_adjoint_, apply_adjoint_!, outputype, _superscript_size
 
 using FFTW
 using LinOps
@@ -90,6 +90,19 @@ apply_!(y, A::LinOpDFT, x) = FFTW.mul!(y, A.forward, complex(x))
 apply_adjoint_!(y, A::LinOpDFT, x) = FFTW.mul!(y, A.backward, complex(x))
 
 outputype(A::LinOpDFT{I, O, <:FFTW.FFTWPlan{T}}, x) where {I, O, T} = typeof(oneunit(T) * oneunit(eltype(x)))
+
+#=
+function Base.summary(A::LinOpDFT{I, O, <:FFTW.FFTWPlan{T}}) where {I, O, T}
+    if T <: fftwReal
+        return "LinOpDFT ℝ$(_superscript_size(inputsize(A))) ⟶ ℂ$(_superscript_size(outputsize(A)))"
+    else
+        return "LinOpDFT ℂ$(_superscript_size(inputsize(A))) ⟶ ℂ$(_superscript_size(outputsize(A)))"
+    end
+end =#
+
+function Base.summary(A::LinOpDFT{I, O, <:FFTW.FFTWPlan{T}}) where {I, O, T}
+    return "LinOpDFT ($T) $(inputsize(A)) -> $(outputsize(A))"
+end
 
 #------------------------------------------------------------------------------
 # Utilities borrowed from LazyAlgebra

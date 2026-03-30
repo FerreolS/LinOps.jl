@@ -22,6 +22,22 @@ function Base.:(==)(a::LinOp, b::LinOp)
     return all(getfield(a, f) == getfield(b, f) for f in fieldnames(typeof(b)))
 end
 
+function Base.summary(A::LinOp)
+    T = typeof(A)
+    name = nameof(T)
+    return "$(name) $(inputsize(A)) -> $(outputsize(A))"
+end
+
+function Base.show(io::IO, A::LinOp)
+    return print(io, summary(A))
+end
+
+function Base.show(io::IO, ::MIME"text/plain", A::LinOp)
+    println(io, "Linear Operator:")
+    println(io, summary(A))
+    return
+end
+
 function assert_applicable(A::LinOp, x)
     return x ∈ inputspace(A) || throw(ArgumentError("The input size (size $(size(x)) ) must belong to the space $(inputspace(A))"))
 end
@@ -75,6 +91,15 @@ Base.parent(A::LinOpAdjoint) = A.parent
 
 LinOpAdjoint(A::LinOpAdjoint) = parent(A)
 Base.adjoint(A::LinOpAdjoint) = parent(A)
+
+function Base.summary(A::LinOpAdjoint)
+    return "LinOpAdjoint of $(summary(parent(A)))"
+end
+
+function Base.show(io::IO, A::LinOpAdjoint)
+    return print(io, summary(A))
+end
+
 
 function apply_!(y, A::LinOpAdjoint, x)
     if applicable(apply_adjoint_!, y, parent(A), x)
