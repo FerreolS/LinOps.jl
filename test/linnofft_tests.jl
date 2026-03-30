@@ -71,7 +71,7 @@ end
 @testset "LinOpNFFT - 1D Float32 roundtrip shape" begin
     Random.seed!(6)
     N = 32; npts = 50
-    xpts = Float32.(π .* (2 .* rand(npts) .- 1))
+    xpts = Float16.(π .* (2 .* rand(npts) .- 1))
     NF = LinOpNFFT(Float32, (N,), (xpts,))
 
     x = randn(Float32, npts)

@@ -70,12 +70,8 @@ function LinOpCompose(A::UniformScaling, B::LinOpCompose{I, O, <:UniformScaling}
 end
 
 
-function apply_(A::LinOpCompose{I, O, <:UniformScaling}, x) where {I, O}
-    return A.left * apply_(A.right, x)
-end
-
 function apply_(A::LinOpCompose, x)
-    return apply_(A.left, apply_(A.right, x))
+    return A.left * (A.right * x)
 end
 
 function apply_!(y, A::LinOpCompose{I, O, <:UniformScaling}, x) where {I, O}
@@ -83,7 +79,7 @@ function apply_!(y, A::LinOpCompose{I, O, <:UniformScaling}, x) where {I, O}
 end
 
 function apply_!(y, A::LinOpCompose, x)
-    return apply_!(y, A.left, apply_(A.right, x))
+    return apply_!(y, A.left, A.right * x)
 end
 
 function apply_adjoint_(A::LinOpCompose, x)
