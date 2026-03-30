@@ -1,7 +1,7 @@
 ## Composition
 Base.:*(A::LinOp, B::LinOp) = LinOpCompose(A, B)
-Base.:*(A::LinOp, B::Union{UniformScaling, Number}) = LinOpCompose(B, A)
-Base.:*(A::Union{UniformScaling, Number}, B::LinOp) = LinOpCompose(A, B)
+Base.:*(A::LinOp, B::Union{<:UniformScaling, <:Number}) = LinOpCompose(B, A)
+Base.:*(A::Union{<:UniformScaling, <:Number}, B::LinOp) = LinOpCompose(A, B)
 Base.:∘(A::LinOp, B) = LinOpCompose(A, B)
 Base.:∘(A, B::LinOp) = LinOpCompose(A, B)
 Base.:∘(A::LinOp, B::LinOp) = LinOpCompose(A, B)
@@ -44,7 +44,7 @@ function LinOpCompose(A::UniformScaling, B::LinOp)
 end
 
 
-function LinOpCompose(A::LinOpCompose, B::LinOpCompose{I, O, UniformScaling}) where {I, O}
+function LinOpCompose(A::LinOpCompose, B::LinOpCompose{I, O, <:UniformScaling}) where {I, O}
     return A.left * (A.right * B)
 end
 
@@ -52,11 +52,11 @@ function LinOpCompose(A::LinOpCompose, B::LinOp)
     return A.left * (A.right * B)
 end
 
-function LinOpCompose(A::LinOp, B::LinOpCompose{I, O, UniformScaling}) where {I, O}
+function LinOpCompose(A::LinOp, B::LinOpCompose{I, O, <:UniformScaling}) where {I, O}
     return B.left * (A * B.right)
 end
 
-function LinOpCompose(A::UniformScaling, B::LinOpCompose{I, O, UniformScaling}) where {I, O}
+function LinOpCompose(A::UniformScaling, B::LinOpCompose{I, O, <:UniformScaling}) where {I, O}
     C = A * B.left
     if C == UniformScaling(0)
         return C
@@ -68,7 +68,7 @@ function LinOpCompose(A::UniformScaling, B::LinOpCompose{I, O, UniformScaling}) 
 end
 
 
-function apply_(A::LinOpCompose{I, O, UniformScaling}, x) where {I, O}
+function apply_(A::LinOpCompose{I, O, <:UniformScaling}, x) where {I, O}
     return A.left * apply_(A.right, x)
 end
 
@@ -76,7 +76,7 @@ function apply_(A::LinOpCompose, x)
     return apply_(A.left, apply_(A.right, x))
 end
 
-function apply_!(y, A::LinOpCompose{I, O, UniformScaling}, x) where {I, O}
+function apply_!(y, A::LinOpCompose{I, O, <:UniformScaling}, x) where {I, O}
     return apply_!(y, A.right, A.left * x)
 end
 

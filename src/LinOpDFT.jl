@@ -73,15 +73,13 @@ struct LinOpNFFT{
         I,
         O,
         F,
-        N,
     } <: LinOp{I, O}
 
     inputspace::I
     outputspace::O
     plan::F             # plan for forward transform
-    dims::NTuple{N, Int}  # dimensions along which the transform is applied
 
-    LinOpNFFT(inputspace::I, outputspace::O, plan::F, dims::NTuple{N, Int}) where {I <: CoordinateSpace, O <: CoordinateSpace, F, N} = new{I, O, F, N}(inputspace, outputspace, plan, dims)
+    LinOpNFFT(inputspace::I, outputspace::O, plan::F) where {I <: CoordinateSpace, O <: CoordinateSpace, F} = new{I, O, F}(inputspace, outputspace, plan)
 end
 
 

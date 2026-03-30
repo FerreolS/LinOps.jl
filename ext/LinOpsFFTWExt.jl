@@ -2,7 +2,7 @@ module LinOpsFFTWExt
 import FFTW
 import FFTW: fftwComplex, fftwReal, plan_brfft, plan_rfft
 import LinOps:
-    CoordinateSpace, LinOpDFT, apply_, apply_!, apply_adjoint_, apply_adjoint_!, outputype, _superscript_size
+    CoordinateSpace, LinOpDFT, apply_, apply_!, apply_adjoint_, apply_adjoint_!, outputtype
 
 using FFTW
 using LinOps
@@ -89,7 +89,7 @@ end
 apply_!(y, A::LinOpDFT, x) = FFTW.mul!(y, A.forward, complex(x))
 apply_adjoint_!(y, A::LinOpDFT, x) = FFTW.mul!(y, A.backward, complex(x))
 
-outputype(A::LinOpDFT{I, O, <:FFTW.FFTWPlan{T}}, x) where {I, O, T} = typeof(oneunit(T) * oneunit(eltype(x)))
+outputtype(A::LinOpDFT{I, O, <:FFTW.FFTWPlan{T}}, x) where {I, O, T} = typeof(oneunit(T) * oneunit(eltype(x)))
 
 #=
 function Base.summary(A::LinOpDFT{I, O, <:FFTW.FFTWPlan{T}}) where {I, O, T}

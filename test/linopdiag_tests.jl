@@ -19,8 +19,8 @@ using LinOps: LinOp, LinOpDiag, CoordinateSpace, inputspace, outputspace, inputs
     @test isendomorphism(A)
     @test isendomorphism(I)
     @test eltype(A) == Float64
-    @test LinOps.outputype(A, x) == Float64
-    @test LinOps.outputype(I, x) == Float64
+    @test LinOps.outputtype(A, x) == Float64
+    @test LinOps.outputtype(I, x) == Float64
 
     @test inputspace(Aadj) == outputspace(A)
     @test outputspace(Aadj) == inputspace(A)

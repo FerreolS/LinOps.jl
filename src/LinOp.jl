@@ -9,8 +9,8 @@ outputsize(A::LinOp) = size(outputspace(A))
 Base.size(A::LinOp) = (outputsize(A), inputsize(A))
 
 Base.eltype(::LinOp) = Bool
-outputype(A::LinOp, x) = typeof(oneunit(eltype(A)) * oneunit(eltype(x)))
-outputype(A::UniformScaling, x) = typeof(oneunit(eltype(A)) * oneunit(eltype(x)))
+outputtype(A::LinOp, x) = typeof(oneunit(eltype(A)) * oneunit(eltype(x)))
+outputtype(A::UniformScaling, x) = typeof(oneunit(eltype(A)) * oneunit(eltype(x)))
 
 isendomorphism(A::LinOp) = inputspace(A) === outputspace(A)
 isendomorphism(::UniformScaling) = true
@@ -67,7 +67,7 @@ function Base.:*(A::LinOp, x)
     if applicable(apply_, A, x)
         return apply_(A, x)
     else
-        y = similar(x, outputype(A, x), outputspace(A))
+        y = similar(x, outputtype(A, x), outputspace(A))
         if applicable(apply_!, y, A, x)
             return apply_!(y, A, x)
         end
@@ -113,7 +113,7 @@ function apply_(A::LinOpAdjoint, x)
     if applicable(apply_adjoint_, parent(A), x)
         return apply_adjoint_(parent(A), x)
     else
-        y = similar(x, outputype(A, x), outputspace(A))
+        y = similar(x, outputtype(A, x), outputspace(A))
         if applicable(apply_adjoint_!, y, parent(A), x)
             return apply_adjoint_!(y, parent(A), x)
         end
