@@ -11,8 +11,15 @@ AbstractFFTs = "621f4979-c628-5d54-868e-fcf4e3e8185c"
 Adapt = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 
+[weakdeps]
+FFTW = "7a1cc6ca-52ef-59f5-83cd-3a7055c09341"
+
+[extensions]
+LinOpsFFTWExt = ["FFTW"]
+
 [compat]
 AbstractFFTs = "1"
 Adapt = "4"
+FFTW = "1"
 LinearAlgebra = "1"
 julia = "1.10"
