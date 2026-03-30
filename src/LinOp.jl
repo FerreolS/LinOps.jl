@@ -95,10 +95,7 @@ Base.adjoint(A::LinOpAdjoint) = parent(A)
 function Base.summary(A::LinOpAdjoint)
     return "LinOpAdjoint of $(summary(parent(A)))"
 end
-
-function Base.show(io::IO, A::LinOpAdjoint)
-    return print(io, summary(A))
-end
+outputtype(A::LinOpAdjoint, x) = outputtype(parent(A), x)
 
 
 function apply_!(y, A::LinOpAdjoint, x)

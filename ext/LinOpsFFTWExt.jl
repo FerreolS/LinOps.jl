@@ -1,11 +1,11 @@
 module LinOpsFFTWExt
 import FFTW
-import FFTW: fftwComplex, fftwReal, plan_brfft, plan_rfft
+import FFTW: fftwComplex, fftwReal, plan_brfft, plan_rfft, plan_fft, plan_bfft
+import LinOps
 import LinOps:
-    CoordinateSpace, LinOpDFT, apply_, apply_!, apply_adjoint_, apply_adjoint_!, outputtype
+    CoordinateSpace, LinOpDFT, apply_, apply_!, apply_adjoint_, apply_adjoint_!, outputtype,
+    inputsize, outputsize
 
-using FFTW
-using LinOps
 
 const PLANNING = (
     FFTW.ESTIMATE | FFTW.MEASURE | FFTW.PATIENT |
