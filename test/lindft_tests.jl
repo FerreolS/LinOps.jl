@@ -1,7 +1,7 @@
 using Random
 using LinearAlgebra: dot, mul!
 using FFTW
-using LinOps: LinOpDFT, LinOp, CoordinateSpace, inputspace, outputspace, inputsize, outputsize, isendomorphism
+using LinOps: LinOpDFT, LinOpDiag, LinOp, CoordinateSpace, inputspace, outputspace, inputsize, outputsize, isendomorphism
 
 @testset "LinOpDFT - Real to complex 1D" begin
     N = 16
@@ -112,6 +112,54 @@ end
 
     x = randn(ComplexF32, N)
     @test F * x ≈ fft(x)
+end
+
+@testset "LinOpDFT - Generic composition and fallback mul!" begin
+    N = 16
+    F = LinOpDFT(ComplexF64, (N,))
+    G = LinOpDFT(ComplexF64, (N,))
+    x = randn(ComplexF64, N)
+
+    C = F * G
+    @test C isa LinOp
+    @test C * x ≈ fft(fft(x))
+
+    y = similar(x)
+    mul!(y, C, x)
+    @test y ≈ fft(fft(x))
+
+    @test F != LinOpDiag(ones(N))
+
+    H = LinOpDFT(ComplexF64, (N + 2,))
+    @test_throws ArgumentError F * H
+end
+
+@testset "LinOpDFT - Distinct adjoint compositions" begin
+    N = 16
+    F = LinOpDFT(ComplexF64, (N,))
+    G = LinOpDFT(ComplexF64, (N,))
+    x = randn(ComplexF64, N)
+
+    C1 = F * G'
+    @test C1 isa LinOp
+    @test C1 * x ≈ fft(bfft(x))
+
+    C2 = F' * G
+    @test C2 isa LinOp
+    @test C2 * x ≈ bfft(fft(x))
+end
+
+@testset "LinOpDFT - Adjoint of generic composition" begin
+    N = 16
+    F = LinOpDFT(ComplexF64, (N,))
+    C = F * F
+    x = randn(ComplexF64, N)
+
+    @test C' * x ≈ bfft(bfft(x))
+
+    y = similar(x)
+    mul!(y, C', x)
+    @test y ≈ bfft(bfft(x))
 end
 
 @testset "LinOpDFT - Summary and show" begin

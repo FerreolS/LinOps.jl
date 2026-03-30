@@ -91,15 +91,6 @@ apply_adjoint_!(y, A::LinOpDFT, x) = FFTW.mul!(y, A.backward, complex(x))
 
 outputtype(A::LinOpDFT{I, O, <:FFTW.FFTWPlan{T}}, x) where {I, O, T} = typeof(oneunit(T) * oneunit(eltype(x)))
 
-#=
-function Base.summary(A::LinOpDFT{I, O, <:FFTW.FFTWPlan{T}}) where {I, O, T}
-    if T <: fftwReal
-        return "LinOpDFT ℝ$(_superscript_size(inputsize(A))) ⟶ ℂ$(_superscript_size(outputsize(A)))"
-    else
-        return "LinOpDFT ℂ$(_superscript_size(inputsize(A))) ⟶ ℂ$(_superscript_size(outputsize(A)))"
-    end
-end =#
-
 function Base.summary(A::LinOpDFT{I, O, <:FFTW.FFTWPlan{T}}) where {I, O, T}
     return "LinOpDFT ($T) $(inputsize(A)) -> $(outputsize(A))"
 end

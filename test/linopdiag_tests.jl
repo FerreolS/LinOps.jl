@@ -161,3 +161,23 @@ end
     @test (A^0) isa LinOpDiag
     @test (A^0) * x == x
 end
+
+@testset "LinOpDiag - Identity and cancellation branches" begin
+    d = [2.0 4.0; 8.0 16.0]
+    x = [1.0 2.0; 3.0 4.0]
+    A = LinOpDiag(d)
+    Ainv = inv(A)
+
+    @test (A * Ainv) === I
+    @test (Ainv * A) === I
+
+    @test (1 * A) === A
+
+    Z = UniformScaling(0) * A
+    @test Z == UniformScaling(0)
+    @test Z * x == zero.(x)
+
+    S0 = A + LinOpDiag(-d)
+    @test S0 == UniformScaling(0)
+    @test S0 * x == zero.(x)
+end

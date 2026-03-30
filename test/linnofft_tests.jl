@@ -1,7 +1,7 @@
 using Random
 using LinearAlgebra: dot, mul!
 using NonuniformFFTs
-using LinOps: LinOpNFFT, LinOp, CoordinateSpace, inputspace, outputspace, inputsize, outputsize, isendomorphism
+using LinOps: LinOpNFFT, LinOp, CoordinateSpace, inputspace, outputspace, inputsize, outputsize, isendomorphism, outputtype
 
 @testset "LinOpNFFT - 1D Float32 construction" begin
     Random.seed!(1)
@@ -25,6 +25,19 @@ end
     y = NF * x
     @test size(y) == outputsize(NF)
     @test eltype(y) == ComplexF32
+end
+
+@testset "LinOpNFFT - outputtype" begin
+    Random.seed!(21)
+    N = 32; npts = 50
+    xpts = Float32.(π .* (2 .* rand(npts) .- 1))
+    NF = LinOpNFFT(Float32, (N,), (xpts,))
+
+    x = randn(Float32, npts)
+    y = NF * x
+
+    @test outputtype(NF, x) == ComplexF32
+    @test outputtype(NF', y) == Float32
 end
 
 @testset "LinOpNFFT - 1D Float32 adjoint via mul!" begin
