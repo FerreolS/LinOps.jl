@@ -1,0 +1,168 @@
+struct LinOpMapslice{I, O, P, D} <: LinOp{I, O}
+    inputspace::I
+    outputspace::O
+    operator::P
+    dims::D
+    function LinOpMapslice(inputspace::I, outputspace::O, operator::P, dims::NTuple{N, Int}) where {I <: CoordinateSpace, O <: CoordinateSpace, P, N}
+        dims = SVector{N, Int}(dims)
+        return new{I, O, P, typeof(dims)}(inputspace, outputspace, operator, dims)
+    end
+end
+
+LinOpMapslice(sz::NTuple, operator, dims::NTuple) = LinOpMapslice(sz, operator, collect(dims))
+LinOpMapslice(sz::NTuple, operator, dims::Int) = LinOpMapslice(sz, operator, collect((dims,)))
+
+function LinOpMapslice(sz::NTuple, operator::LinOp, dims::Vector{Int})
+    maximum(dims) <= length(sz) || throw(ArgumentError("Selected dimensions exceed the number of dimensions in the input space"))
+    sz[dims] == inputsize(operator) || throw(ArgumentError("The size of the operator does not match the selected dimensions"))
+
+    inputspace = CoordinateSpace(sz)
+    outputsz = (sz[1:(dims[1] - 1)]..., outputsize(operator)..., sz[(dims[end] + 1):length(sz)]...)
+    outputspace = CoordinateSpace(outputsz)
+    return LinOpMapslice(inputspace, outputspace, operator, tuple(dims...))
+end
+
+function LinOpMapslice(sz::NTuple{N, Int}, operators::AbstractArray{<:LinOp}, dims::Vector{Int}) where {N}
+    maximum(dims) <= length(sz) || throw(ArgumentError("Selected dimensions exceed the number of dimensions in the input space"))
+    mapreduce(x -> outputsize(first(operators)) == outputsize(x), &, operators) || throw(ArgumentError("All operators in the array should have the same output size"))
+    mapreduce(x -> inputsize(first(operators)) == inputsize(x), &, operators) || throw(ArgumentError("All operators in the array should have the same input size"))
+    sz[dims] == inputsize(first(operators)) || throw(ArgumentError("The size of the operator does not match the selected dimensions"))
+    remainingdims = trues(N)
+    remainingdims[dims] .= false
+    sz[remainingdims] == size(operators) || throw(ArgumentError("The number of operators should match the size of the selected dimensions"))
+
+    inputspace = CoordinateSpace(sz)
+    outputsz = (sz[1:(dims[1] - 1)]..., outputsize(first(operators))..., sz[(dims[end] + 1):length(sz)]...)
+    outputspace = CoordinateSpace(outputsz)
+    return LinOpMapslice(inputspace, outputspace, operators, tuple(dims...))
+end
+
+
+function LinOpMapslice(sz::NTuple{N, Int}, operators::AbstractArray{<:Union{Number, UniformScaling}}, dims::Vector{Int}) where {N}
+    maximum(dims) <= length(sz) || throw(ArgumentError("Selected dimensions exceed the number of dimensions in the input space"))
+    remainingdims = trues(N)
+    remainingdims[dims] .= false
+    sz[remainingdims] == size(operators) || throw(ArgumentError("The number of operators should match the size of the selected dimensions"))
+
+    inputspace = CoordinateSpace(sz)
+    outputspace = CoordinateSpace(sz)
+    return LinOpMapslice(inputspace, outputspace, operators, tuple(dims...))
+end
+
+function LinOpMapslice(sz::NTuple{N, Int}, operators::AbstractArray{<:AbstractMatrix}, dims::Vector{Int}) where {N}
+    maximum(dims) <= length(sz) || throw(ArgumentError("Selected dimensions exceed the number of dimensions in the input space"))
+    length(dims) == 1 || throw(ArgumentError("Only one dimension can be selected for matrix operators"))
+    remainingdims = trues(N)
+    remainingdims[dims] .= false
+    sz[remainingdims] == size(operators) || throw(ArgumentError("The number of operators should match the size of the selected dimensions"))
+
+    sz[dims] == tuple(size(first(operators), 2)) || throw(ArgumentError("The size of the operator does not match the selected dimension"))
+    outputsz = (sz[1:(dims[1] - 1)]..., size(first(operators), 1), sz[(dims[1] + 1):length(sz)]...)
+
+    inputspace = CoordinateSpace(sz)
+    outputspace = CoordinateSpace(outputsz)
+    return LinOpMapslice(inputspace, outputspace, operators, tuple(dims...))
+end
+
+
+function apply_!(y, A::LinOpMapslice{I, O, P, D}, x) where {N, I, O, P <: LinOp, D <: SVector{N, Int}}
+    inputsz = inputsize(A)
+    dims = A.dims
+    d1 = dims[1]
+    ndrange = _mapslice_ndrange(inputsz, d1, N, Val(ndims(I) - N))
+    backend = get_backend(x)
+    cout = colons(Val(ndims(outputspace(A.operator))))
+    cin = colons(Val(ndims(inputspace(A.operator))))
+    LinOpMapslice_kernel(backend)(y, x, A.operator, cin, cout, d1, ndrange = ndrange)
+    synchronize(backend)
+    return y
+end
+
+
+function apply_!(y, A::LinOpMapslice{I, O, P, D}, x) where {N, I, O, P <: AbstractArray{<:Union{Number, UniformScaling}}, D <: SVector{N, Int}}
+    inputsz = inputsize(A)
+    dims = A.dims
+    d1 = dims[1]
+    ndrange = _mapslice_ndrange(inputsz, d1, N, Val(ndims(I) - N))
+    backend = get_backend(x)
+    c = colons(Val(N))
+    LinOpMapslice_kernel(backend)(y, x, A.operator, c, c, d1, ndrange = ndrange)
+    synchronize(backend)
+    return y
+end
+
+
+function apply_!(y, A::LinOpMapslice{I, O, P, D}, x) where {N, I, O, P <: AbstractArray, D <: SVector{N, Int}}
+    inputsz = inputsize(A)
+    dims = A.dims
+    d1 = dims[1]
+    ndrange = _mapslice_ndrange(inputsz, d1, N, Val(ndims(I) - N))
+    backend = get_backend(x)
+    cout = colons(Val(ndims(outputspace(first(A.operator)))))
+    cin = colons(Val(ndims(inputspace(first(A.operator)))))
+    LinOpMapslice_kernel(backend)(y, x, A.operator, cin, cout, d1, ndrange = ndrange)
+    synchronize(backend)
+    return y
+end
+
+
+@inline _mapslice_ndrange(outputsz, d1::Int, M::Int, ::Val{K}) where {K} = ntuple(i -> i < d1 ? outputsz[i] : outputsz[i + M], Val(K))
+
+function apply_adjoint_!(y, A::LinOpMapslice{I, O, P, D}, x) where {N, I, O, P <: LinOp, D <: SVector{N, Int}}
+    outputsz = outputsize(A)
+    backend = get_backend(x)
+    d1 = A.dims[1]
+    M = ndims(outputspace(A.operator))
+    ndrange = _mapslice_ndrange(outputsz, d1, M, Val(ndims(I) - N))
+    cin = colons(Val(ndims(outputspace(A.operator))))
+    cout = colons(Val(ndims(inputspace(A.operator))))
+    LinOpMapslice_kernel(backend)(y, x, A.operator', cin, cout, d1, ndrange = ndrange)
+    synchronize(backend)
+    return y
+end
+
+
+function apply_adjoint_!(y, A::LinOpMapslice{I, O, P, D}, x) where {N, I, O, P <: AbstractArray{<:Union{Number, UniformScaling}}, D <: SVector{N, Int}}
+    outputsz = outputsize(A)
+    backend = get_backend(x)
+    d1 = A.dims[1]
+    ndrange = _mapslice_ndrange(outputsz, d1, N, Val(ndims(I) - N))
+    c = colons(Val(N))
+    LinOpMapslice_kernel(backend)(y, x, map(adjoint, A.operator), c, c, d1, ndrange = ndrange)
+    synchronize(backend)
+    return y
+end
+
+
+function apply_adjoint_!(y, A::LinOpMapslice{I, O, P, D}, x) where {N, I, O, P <: AbstractArray, D <: SVector{N, Int}}
+    outputsz = outputsize(A)
+    backend = get_backend(x)
+    d1 = A.dims[1]
+    M = ndims(outputspace(first(A.operator)))
+    ndrange = _mapslice_ndrange(outputsz, d1, M, Val(ndims(I) - N))
+    cout = colons(Val(ndims(outputspace(first(A.operator)))))
+    cin = colons(Val(ndims(inputspace(first(A.operator)))))
+    LinOpMapslice_kernel(backend)(y, x, map(adjoint, A.operator), cin, cout, d1, ndrange = ndrange)
+    synchronize(backend)
+    return y
+end
+
+
+@kernel function LinOpMapslice_kernel(Y, X, A, cin, cout, dims)
+    I = @index(Global, Cartesian)
+    I1 = CartesianIndex(I.I[1:(dims - 1)])
+    I2 = CartesianIndex(I.I[dims:end])
+    #view(Y, I1, colons(Val(ndims(outputspace(A))))..., I2) .= A * view(X, I1, colons(Val(ndims(inputspace(A))))..., I2)
+    mul!(view(Y, I1, cout..., I2), A, view(X, I1, cin..., I2))
+
+    #Y[I1, .., I2] .= A * X[I1, .., I2]
+end
+
+@kernel function LinOpMapslice_kernel(Y, X, A::AbstractArray, cin, cout, dims)
+    I = @index(Global, Cartesian)
+    I1 = CartesianIndex(I.I[1:(dims - 1)])
+    I2 = CartesianIndex(I.I[dims:end])
+    #view(Y, I1, colons(Val(ndims(outputspace(A))))..., I2) .= A * view(X, I1, colons(Val(ndims(inputspace(A))))..., I2)
+    mul!(view(Y, I1, cout..., I2), A[I], view(X, I1, cin..., I2))
+
+end

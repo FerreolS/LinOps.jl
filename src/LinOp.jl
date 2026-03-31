@@ -4,6 +4,9 @@ abstract type LinOp{I, O} end
 inputspace(A::LinOp) = isabstracttype(A) ? CoordinateSpace() : A.inputspace
 outputspace(A::LinOp) = isabstracttype(A) ? CoordinateSpace() : A.outputspace
 
+outputspace(A::AbstractMatrix) = CoordinateSpace(size(A, 1))
+inputspace(A::AbstractMatrix) = CoordinateSpace(size(A, 2))
+
 inputsize(A::LinOp) = size(inputspace(A))
 outputsize(A::LinOp) = size(outputspace(A))
 Base.size(A::LinOp) = (outputsize(A), inputsize(A))

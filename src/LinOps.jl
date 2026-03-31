@@ -1,10 +1,27 @@
 module LinOps
 
-import Adapt
-using LinearAlgebra
-using AbstractFFTs
-import LinearAlgebra: mul!, I, UniformScaling
-export I, LinOp, LinOpDFT, LinOpDiag, LinOpNFFT, UniformScaling, inputsize, mul!, outputsize
+using AbstractFFTs,
+    Adapt,
+    ArrayTools,
+    KernelAbstractions,
+    LinearAlgebra,
+    StaticArrays
+
+import LinearAlgebra:
+    mul!,
+    I,
+    UniformScaling
+
+export I,
+    LinOp,
+    LinOpDFT,
+    LinOpDiag,
+    LinOpMapslice,
+    LinOpNFFT,
+    UniformScaling,
+    inputsize,
+    mul!,
+    outputsize
 
 VERSION >= v"1.11.0-DEV.469" && eval(
     Meta.parse(
@@ -18,5 +35,6 @@ include("LinOp.jl")
 include("Operations.jl")
 include("LinOpDiag.jl")
 include("LinOpDFT.jl")
+include("LinOpMapslice.jl")
 
 end
