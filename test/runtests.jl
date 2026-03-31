@@ -10,6 +10,7 @@ using Test
     include("linop_tests.jl")
     include("linopmapslice_tests.jl")
     include("linopdiag_tests.jl")
+    include("linopgrad_tests.jl")
     include("lindft_tests.jl")
     include("linnofft_tests.jl")
 

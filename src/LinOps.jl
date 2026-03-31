@@ -16,6 +16,7 @@ export I,
     LinOp,
     LinOpDFT,
     LinOpDiag,
+    LinOpGrad,
     LinOpMapslice,
     LinOpNFFT,
     UniformScaling,
@@ -34,6 +35,7 @@ include("Domains.jl")
 include("LinOp.jl")
 include("Operations.jl")
 include("LinOpDiag.jl")
+include("LinOpGrad.jl")
 include("LinOpDFT.jl")
 include("LinOpMapslice.jl")
 
