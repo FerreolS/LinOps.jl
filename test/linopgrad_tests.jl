@@ -79,9 +79,9 @@ end
     @test lhs ≈ rhs rtol = 1.0e-12 atol = 1.0e-12
 end
 
-@testset "LinOpGrad - Custom diff offsets" begin
+@testset "LinOpGrad - Custom offsets " begin
     x = randn(3, 4, 5)
-    A = LinOpGrad(size(x); diff = [1, 2, 0])
+    A = LinOpGrad(size(x); offsets = [1, 2, 0])
     y = A * x
 
     @test outputsize(A) == (3, 4, 5, 2)
@@ -98,9 +98,9 @@ end
     @test y ≈ expected
 end
 
-@testset "LinOpGrad - Zero diff dimensions" begin
+@testset "LinOpGrad - Zero offsets dimensions" begin
     x = randn(4, 3)
-    A = LinOpGrad(size(x); diff = [0, 1])
+    A = LinOpGrad(size(x); offsets = [0, 1])
     y = A * x
 
     @test outputsize(A) == (4, 3, 1)
@@ -113,9 +113,9 @@ end
     @test y ≈ expected
 end
 
-@testset "LinOpGrad - Custom diff validation" begin
+@testset "LinOpGrad - Custom offsets validation" begin
     x = randn(3, 4, 5)
-    @test_throws ArgumentError LinOpGrad(size(x); diff = [1, 2])
-    @test_throws ArgumentError LinOpGrad(size(x); diff = [1, -1, 0])
-    @test_throws ArgumentError LinOpGrad(size(x); diff = [4, 0, 0]) * x
+    @test_throws ArgumentError LinOpGrad(size(x); offsets = [1, 2])
+    @test_throws ArgumentError LinOpGrad(size(x); offsets = [1, -1, 0])
+    @test_throws ArgumentError LinOpGrad(size(x); offsets = [4, 0, 0]) * x
 end
