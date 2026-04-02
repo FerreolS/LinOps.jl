@@ -12,8 +12,17 @@ outputsize(A::LinOp) = size(outputspace(A))
 Base.size(A::LinOp) = (outputsize(A), inputsize(A))
 
 Base.eltype(::LinOp) = Bool
-outputtype(A::LinOp, x) = typeof(oneunit(eltype(A)) * oneunit(eltype(x)))
+outputtype(A::LinOp, x) = typeof(oneunit(eltype(outputspace(A))) * oneunit(eltype(x)))
 outputtype(A::UniformScaling, x) = typeof(oneunit(eltype(A)) * oneunit(eltype(x)))
+outputtype(A::AbstractMatrix, x) = typeof(oneunit(eltype(A)) * oneunit(eltype(x)))
+inputtype(A::LinOp, x) = typeof(oneunit(eltype(inputspace(A))) * oneunit(eltype(x)))
+
+inputtype(::LinOp{I}, _) where {T, I <: TypedCoordinateSpace{T}} = T
+outputtype(::LinOp{I, O}, _) where {T, I, O <: TypedCoordinateSpace{T}} = T
+
+inputtype(A::UniformScaling, x) = outputtype(A, x)
+inputtype(A::AbstractMatrix, x) = outputtype(A, x)
+
 
 isendomorphism(A::LinOp) = inputspace(A) === outputspace(A)
 isendomorphism(::UniformScaling) = true
@@ -88,8 +97,6 @@ end
 
 Base.adjoint(A::LinOp) = LinOpAdjoint(A)
 
-inputspace(A::LinOpAdjoint) = outputspace(parent(A))
-outputspace(A::LinOpAdjoint) = inputspace(parent(A))
 Base.parent(A::LinOpAdjoint) = A.parent
 
 LinOpAdjoint(A::LinOpAdjoint) = parent(A)
@@ -98,7 +105,12 @@ Base.adjoint(A::LinOpAdjoint) = parent(A)
 function Base.summary(A::LinOpAdjoint)
     return "LinOpAdjoint of $(summary(parent(A)))"
 end
-outputtype(A::LinOpAdjoint, x) = outputtype(parent(A), x)
+outputtype(A::LinOpAdjoint, x) = inputtype(parent(A), x)
+inputtype(A::LinOpAdjoint, x) = outputtype(parent(A), x)
+inputsize(A::LinOpAdjoint) = outputsize(parent(A))
+outputsize(A::LinOpAdjoint) = inputsize(parent(A))
+inputspace(A::LinOpAdjoint) = outputspace(parent(A))
+outputspace(A::LinOpAdjoint) = inputspace(parent(A))
 
 
 function apply_!(y, A::LinOpAdjoint, x)

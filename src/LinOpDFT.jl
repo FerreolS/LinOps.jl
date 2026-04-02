@@ -79,7 +79,7 @@ struct LinOpNFFT{
     outputspace::O
     plan::F             # plan for forward transform
 
-    LinOpNFFT(inputspace::I, outputspace::O, plan::F) where {I <: CoordinateSpace, O <: CoordinateSpace, F} = new{I, O, F}(inputspace, outputspace, plan)
+    LinOpNFFT(inputspace::I, outputspace::O, plan::F) where {I <: AbstractDomain, O <: AbstractDomain, F} = new{I, O, F}(inputspace, outputspace, plan)
 end
 
 

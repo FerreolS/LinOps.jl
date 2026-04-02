@@ -1,6 +1,6 @@
 module LinOpsNonuniformFFTsExt
 using LinOps, NonuniformFFTs
-import LinOps: CoordinateSpace, LinOpAdjoint, LinOpNFFT, apply_!, apply_adjoint_!, outputtype
+import LinOps: TypedCoordinateSpace, LinOpAdjoint, LinOpNFFT, apply_!, apply_adjoint_!, outputtype, inputtype
 import NonuniformFFTs: PlanNUFFT, exec_type1!, exec_type2!, set_points!
 
 # Real-to-complex FFT.
@@ -16,14 +16,11 @@ function LinOpNFFT(
     end
     plan_nufft = PlanNUFFT(T, sz; kwargs...)
     set_points!(plan_nufft, points)
-    outputspace = CoordinateSpace(size(plan_nufft))
-    inputspace = CoordinateSpace(length(points[1]))
+    outputspace = TypedCoordinateSpace(Complex{T1}, size(plan_nufft))
+    inputspace = TypedCoordinateSpace(T, (length(points[1]),))
 
     return LinOpNFFT(inputspace, outputspace, plan_nufft)
 end
-
-outputtype(A::LinOpNFFT{I, O, <:PlanNUFFT{T}}, x) where {I, O, T <: Real} = Complex{T}
-outputtype(A::LinOpAdjoint{O, I, <:LinOpNFFT{I, O, <:PlanNUFFT{T}}}, x) where {I, O, T <: Real} = T
 
 function Base.show(io::IO, ::MIME"text/plain", A::LinOpNFFT)
     print(io, "Linear Operator: ")

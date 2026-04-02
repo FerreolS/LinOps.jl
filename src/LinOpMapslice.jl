@@ -3,22 +3,35 @@ struct LinOpMapslice{I, O, P, D} <: LinOp{I, O}
     outputspace::O
     operator::P
     dims::D
-    function LinOpMapslice(inputspace::I, outputspace::O, operator::P, dims::NTuple{N, Int}) where {I <: CoordinateSpace, O <: CoordinateSpace, P, N}
+    function LinOpMapslice(inputspace::I, outputspace::O, operator::P, dims::NTuple{N, Int}) where {I, O, P, N}
         dims = SVector{N, Int}(dims)
         return new{I, O, P, typeof(dims)}(inputspace, outputspace, operator, dims)
     end
 end
 
+outputtype(A::LinOpMapslice{I, O, <:LinOp}, x) where {I, O} = outputtype(A.operator, x)
+outputtype(A::LinOpAdjoint{O, I, <:LinOpMapslice{I, O, <:LinOp}}, x) where {I, O} = outputtype(adjoint(parent(A).operator), x)
+
 LinOpMapslice(sz::NTuple, operator, dims::NTuple) = LinOpMapslice(sz, operator, collect(dims))
 LinOpMapslice(sz::NTuple, operator, dims::Int) = LinOpMapslice(sz, operator, collect((dims,)))
 
-function LinOpMapslice(sz::NTuple, operator::LinOp, dims::Vector{Int})
+function LinOpMapslice(sz::NTuple, operator::LinOp{I, O}, dims::Vector{Int}) where {I, O}
     maximum(dims) <= length(sz) || throw(ArgumentError("Selected dimensions exceed the number of dimensions in the input space"))
     sz[dims] == inputsize(operator) || throw(ArgumentError("The size of the operator does not match the selected dimensions"))
 
-    inputspace = CoordinateSpace(sz)
+    if I <: TypedCoordinateSpace
+        inputspace = TypedCoordinateSpace(eltype(I), sz)
+    else
+        inputspace = CoordinateSpace(sz)
+    end
+
     outputsz = (sz[1:(dims[1] - 1)]..., outputsize(operator)..., sz[(dims[end] + 1):length(sz)]...)
-    outputspace = CoordinateSpace(outputsz)
+
+    if O <: TypedCoordinateSpace
+        outputspace = TypedCoordinateSpace(eltype(O), outputsz)
+    else
+        outputspace = CoordinateSpace(outputsz)
+    end
     return LinOpMapslice(inputspace, outputspace, operator, tuple(dims...))
 end
 
@@ -31,9 +44,9 @@ function LinOpMapslice(sz::NTuple{N, Int}, operators::AbstractArray{<:LinOp}, di
     remainingdims[dims] .= false
     sz[remainingdims] == size(operators) || throw(ArgumentError("The number of operators should match the size of the selected dimensions"))
 
-    inputspace = CoordinateSpace(sz)
     outputsz = (sz[1:(dims[1] - 1)]..., outputsize(first(operators))..., sz[(dims[end] + 1):length(sz)]...)
-    outputspace = CoordinateSpace(outputsz)
+    outputspace, inputspace = build_spaces(operators, sz, outputsz)
+
     return LinOpMapslice(inputspace, outputspace, operators, tuple(dims...))
 end
 
@@ -65,7 +78,7 @@ function LinOpMapslice(sz::NTuple{N, Int}, operators::AbstractArray{<:AbstractMa
 end
 
 
-function apply_!(y, A::LinOpMapslice{I, O, P, D}, x) where {N, I, O, P <: LinOp, D <: SVector{N, Int}}
+function apply_!(y, A::LinOpMapslice{I, O, <:LinOp, SVector{N, Int}}, x) where {N, I, O}
     inputsz = inputsize(A)
     dims = A.dims
     d1 = dims[1]
@@ -165,4 +178,21 @@ end
     #view(Y, I1, colons(Val(ndims(outputspace(A))))..., I2) .= A * view(X, I1, colons(Val(ndims(inputspace(A))))..., I2)
     mul!(view(Y, I1, cout..., I2), A[I], view(X, I1, cin..., I2))
 
+end
+
+
+function build_spaces(operators, sz, outputsz)
+    outputdomain = mapreduce(outputspace, promote_domain, operators)
+    inputdomain = mapreduce(inputspace, promote_domain, operators)
+    if inputdomain isa TypedCoordinateSpace
+        inputspace = TypedCoordinateSpace(eltype(inputdomain), sz)
+    else
+        inputspace = CoordinateSpace(sz)
+    end
+    if outputdomain isa TypedCoordinateSpace
+        outputspace = TypedCoordinateSpace(eltype(outputdomain), outputsz)
+    else
+        outputspace = CoordinateSpace(outputsz)
+    end
+    return outputspace, inputspace
 end

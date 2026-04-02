@@ -17,9 +17,20 @@ end
 outputtype(A::LinOpCompose{O, I, L, R}, x) where {I, O, L, R} = outputtype(A.left, outputtype(A.right, x))
 
 
-function LinOpCompose(A::LinOp, B::LinOp)
-    outputspace(B) == inputspace(A) || throw(ArgumentError("The output space of the right operator should match the input space of the left operator"))
-    return LinOpCompose(inputspace(B), outputspace(A), A, B)
+function LinOpCompose(A::LinOp{IA, OA}, B::LinOp{IB, OB}) where {IA, OA, IB, OB}
+    outputspace(B) ⊂ inputspace(A) || throw(ArgumentError("The output space of the right operator should match the input space of the left operator"))
+    inspace = inputspace(B)
+    outspace = outputspace(A)
+    if IA <: TypedCoordinateSpace && IB <: CoordinateSpace
+        inspace = TypedCoordinateSpace(eltype(IA), size(inspace))
+    end
+
+    if OB <: TypedCoordinateSpace && IA <: CoordinateSpace
+        outspace = TypedCoordinateSpace(eltype(OB), size(outspace))
+    end
+
+    return LinOpCompose(inspace, outspace, A, B)
+
 end
 
 
