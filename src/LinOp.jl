@@ -1,8 +1,8 @@
 abstract type LinOp{I, O} end
 
 
-inputspace(A::LinOp) = isabstracttype(A) ? CoordinateSpace() : A.inputspace
-outputspace(A::LinOp) = isabstracttype(A) ? CoordinateSpace() : A.outputspace
+inputspace(A::LinOp) = A.inputspace
+outputspace(A::LinOp) = A.outputspace
 
 outputspace(A::AbstractMatrix) = CoordinateSpace(size(A, 1))
 inputspace(A::AbstractMatrix) = CoordinateSpace(size(A, 2))

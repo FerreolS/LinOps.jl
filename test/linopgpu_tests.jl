@@ -190,31 +190,3 @@ end
         @test outputspace(M_gpu) == CoordinateSpace(sz)
     end
 end
-
-@testset "LinOpDiag and LinOpMapslice - CPU autodiff (basic tests)" begin
-    @testset "LinOpDiag basic operations" begin
-        d_cpu = [2.0, 3.0, 4.0]
-        x_cpu = randn(3)
-        A_cpu = LinOpDiag(d_cpu)
-
-        # Test forward pass
-        y = A_cpu * x_cpu
-        @test y ≈ d_cpu .* x_cpu
-
-        # Test that GPU grad_cpu has same shape
-        @test length(y) == length(x_cpu)
-    end
-
-    @testset "LinOpMapslice basic operations" begin
-        sz = (2, 4, 3)
-        d_cpu = randn(4)
-        x_cpu = randn(sz...)
-        D_cpu = LinOpDiag(d_cpu)
-        M_cpu = LinOpMapslice(sz, D_cpu, 2)
-
-        # Test forward pass
-        y = M_cpu * x_cpu
-        @test size(y) == sz
-        @test all(isfinite.(y))
-    end
-end

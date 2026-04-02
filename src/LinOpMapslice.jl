@@ -181,18 +181,19 @@ end
 end
 
 
-function build_spaces(operators, sz, outputsz)
-    outputdomain = mapreduce(outputspace, promote_domain, operators)
-    inputdomain = mapreduce(inputspace, promote_domain, operators)
-    if inputdomain isa TypedCoordinateSpace
-        inputspace = TypedCoordinateSpace(eltype(inputdomain), sz)
+function build_spaces(operators, inputsz, outputsz)
+    outputdomain = mapreduce(x -> typeof(outputspace(x)), promote_domain, operators)
+    inputdomain = mapreduce(x -> typeof(inputspace(x)), promote_domain, operators)
+
+    if inputdomain === TypedCoordinateSpace
+        ginputspace = TypedCoordinateSpace(eltype(inputdomain), inputsz)
     else
-        inputspace = CoordinateSpace(sz)
+        ginputspace = CoordinateSpace(inputsz)
     end
-    if outputdomain isa TypedCoordinateSpace
-        outputspace = TypedCoordinateSpace(eltype(outputdomain), outputsz)
+    if outputdomain === TypedCoordinateSpace
+        goutputspace = TypedCoordinateSpace(eltype(outputdomain), outputsz)
     else
-        outputspace = CoordinateSpace(outputsz)
+        goutputspace = CoordinateSpace(outputsz)
     end
-    return outputspace, inputspace
+    return goutputspace, ginputspace
 end
