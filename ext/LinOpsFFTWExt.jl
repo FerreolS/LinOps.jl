@@ -85,6 +85,8 @@ function LinOpDFT(
     return LinOpDFT(inputspace, outputspace, forward, backward)
 end
 
+LinOpDFT(sz::NTuple; kwargs...) = LinOpDFT(ComplexF64, sz; kwargs...)
+
 apply_!(y, A::LinOpDFT, x) = FFTW.mul!(y, A.forward, complex(x))
 apply_adjoint_!(y, A::LinOpDFT, x) = FFTW.mul!(y, A.backward, complex(x))
 

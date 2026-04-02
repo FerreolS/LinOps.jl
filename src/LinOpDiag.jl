@@ -16,8 +16,8 @@ function Base.summary(A::LinOpDiag)
     return "LinOpDiag ($(eltype(A.diag))) $(inputsize(A)) -> $(outputsize(A))"
 end
 
-apply_(A::LinOpDiag, x) = return A.diag .* x
-apply_adjoint_(A::LinOpDiag, x) = return conj.(A.diag) .* x
+apply_(A::LinOpDiag, x) = A.diag .* x
+apply_adjoint_(A::LinOpDiag, x) = conj.(A.diag) .* x
 
 apply_!(y, A::LinOpDiag, x) = @. y = A.diag * x
 apply_adjoint_!(y, A::LinOpDiag, x) = @. y = conj.(A.diag) * x
