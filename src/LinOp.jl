@@ -74,7 +74,7 @@ function mul!(y, A::LinOp, x)
     throw(ArgumentError("Neither apply_ or apply_! are implemented for $(typeof(A))"))
 end
 
-function Base.:*(A::LinOp, x)
+function Base.:*(A::LinOp, x::AbstractArray)
     assert_applicable(A, x)
     if applicable(apply_, A, x)
         return apply_(A, x)

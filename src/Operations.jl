@@ -24,13 +24,10 @@ function LinOpCompose(A::LinOp{IA, OA}, B::LinOp{IB, OB}) where {IA, OA, IB, OB}
     if IA <: TypedCoordinateSpace && IB <: CoordinateSpace
         inspace = TypedCoordinateSpace(eltype(IA), size(inspace))
     end
-
     if OB <: TypedCoordinateSpace && IA <: CoordinateSpace
         outspace = TypedCoordinateSpace(eltype(OB), size(outspace))
     end
-
     return LinOpCompose(inspace, outspace, A, B)
-
 end
 
 
@@ -58,6 +55,10 @@ end
 
 
 function LinOpCompose(A::LinOpCompose, B::LinOp)
+    return A.left * (A.right * B)
+end
+
+function LinOpCompose(A::LinOpCompose, B::LinOpCompose{I, O, <:UniformScaling}) where {I, O}
     return A.left * (A.right * B)
 end
 
@@ -98,12 +99,12 @@ function apply_adjoint_!(y, A::LinOpCompose, x)
 end
 
 Base.inv(A::LinOpCompose) = Base.inv(A.right) * Base.inv(A.left)
-## Inverse
 
+## Inverse
 Base.:^(A::LinOp, n::Int) = n > 0 ? A^(n - 1) * A : (n == 0 ? LinearAlgebra.I : Base.inv(A)^(-n))
 
 
-function Base.:/(A, B::LinOp)
+function Base.:/(A::Union{LinOp, Number, UniformScaling}, B::LinOp)
     return A * inv(B)
 end
 
@@ -114,15 +115,15 @@ function Base.:/(A::LinOp, B::LinOp)
     return A * inv(B)
 end
 
-function Base.:/(A::LinOp, B)
+function Base.:/(A::LinOp, B::Union{LinOp, Number, UniformScaling})
     return A * inv(B)
 end
 
-function Base.:\(A, B::LinOp)
+function Base.:\(A::Union{LinOp, Number, UniformScaling}, B::LinOp)
     return inv(A) * B
 end
 
-function Base.:\(A::LinOp, B)
+function Base.:\(A::LinOp, B::Union{LinOp, Number, UniformScaling})
     return inv(A) * B
 end
 
@@ -134,7 +135,7 @@ function Base.:\(A::LinOp, B::LinOp)
 end
 
 ## Sum
-Base.:+(A, B::LinOp) = LinOpSum(A, B)
+Base.:+(A::Union{LinOp, Number, UniformScaling}, B::LinOp) = LinOpSum(A, B)
 Base.:+(A::LinOp, B::Union{UniformScaling, Number}) = B + A
 
 struct LinOpSum{I, O, L <: Union{UniformScaling, LinOp}, R <: LinOp} <: LinOp{I, O}
@@ -186,6 +187,6 @@ function apply_adjoint_!(y, A::LinOpSum, x)
 end
 
 Base.:-(A::LinOp, B::LinOp) = A + (-1 * B)
-Base.:-(A::LinOp, B) = A + (-1 * B)
-Base.:-(A, B::LinOp) = A + (-1 * B)
+Base.:-(A::LinOp, B::Union{LinOp, Number, UniformScaling}) = A + (-1 * B)
+Base.:-(A::Union{LinOp, Number, UniformScaling}, B::LinOp) = A + (-1 * B)
 Base.:-(A::LinOp) = -1 * A
