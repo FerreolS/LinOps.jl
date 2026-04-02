@@ -130,7 +130,8 @@ function apply_(A::LinOpAdjoint, x)
             return apply_adjoint_!(y, parent(A), x)
         end
     end
-    throw(ArgumentError("Neither apply_adjoint_ or apply_adjoint_! are implemented for $(typeof(A))"))
+    return apply_adjoint_via_ad(parent(A), x)
+    #throw(ArgumentError("Neither apply_adjoint_ or apply_adjoint_! are implemented for $(typeof(A))"))
     # return apply_adjoint_via_ad(parent(A), x) # a voir dans une extension DI
 end
 
@@ -163,10 +164,15 @@ end
 
 
 function ChainRulesCore.rrule(::typeof(Base.:*), A::LinOp, v)
-    if applicable(apply_adjoint_, A, v) || applicable(apply_adjoint_!, AbstractArray, A, v)
-        ∂Y(Δy) = (NoTangent(), NoTangent(), adjoint(A) * ChainRulesCore.unthunk(Δy))
-    else
-        return apply_adjoint_via_ad(apply_, A, v)
+    has_adjoint = applicable(apply_adjoint_, A, v) ||
+        applicable(apply_adjoint_!, AbstractArray, A, v)
+    function ∂Y(Δy)
+        Δv = if has_adjoint
+            adjoint(A) * ChainRulesCore.unthunk(Δy)
+        else
+            apply_adjoint_via_ad(A, Δy)
+        end
+        return NoTangent(), NoTangent(), Δv
     end
     return A * v, ∂Y
 end

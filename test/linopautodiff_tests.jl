@@ -1,7 +1,22 @@
 using Zygote
 using FiniteDifferences
 using LinOps: LinOp, LinOpDiag, LinOpGrad, LinOpDFT, LinOpMapslice,
-    inputsize, outputsize
+    CoordinateSpace, inputsize, outputsize
+
+struct LinOpDiagX{I, D <: AbstractArray} <: LinOp{I, I}
+    inputspace::I
+    diag::D
+end
+
+function LinOpDiagX(diag::D) where {D <: AbstractArray}
+    inspace = CoordinateSpace(size(diag))
+    return LinOpDiagX(inspace, diag)
+end
+
+LinOps.outputspace(A::LinOpDiagX) = LinOps.inputspace(A)
+Base.eltype(A::LinOpDiagX) = eltype(A.diag)
+LinOps.isendomorphism(::LinOpDiagX) = true
+LinOps.apply_(A::LinOpDiagX, x) = A.diag .* x
 
 # Helper: compare Zygote gradient against a central finite-difference estimate.
 function check_gradient(f, x; rtol = 1.0e-4)
@@ -37,6 +52,22 @@ end
         f(v) = sum(abs2, A * v)
         @test check_gradient(f, x)
     end
+end
+
+@testset "apply_adjoint_via_ad fallback via Zygote extension" begin
+    d = [2.0 3.0; 4.0 5.0]
+    D = LinOpDiag(d)
+    DX = LinOpDiagX(d)
+    x = randn(LinOps.inputspace(DX))
+
+    @test DX * x ≈ D * x
+    @test LinOps.apply_adjoint_via_ad(DX, x) ≈ D' * x
+    @test DX' * x ≈ D' * x
+
+    f(v) = sum(abs2, D * v)
+    g(v) = sum(abs2, DX * v)
+
+    @test Zygote.gradient(f, x)[1] ≈ Zygote.gradient(g, x)[1]
 end
 
 @testset "LinOpGrad - autodiff via Zygote" begin
