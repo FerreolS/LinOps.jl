@@ -198,3 +198,33 @@ end
     @test ndims(sp) == 1
     @test length(sp) == 42
 end
+
+@testset "Domains - TypedCoordinateSpace, ⊂ and promote_domain" begin
+    ts_int = LinOps.TypedCoordinateSpace(Int, (2, 3))
+    ts_float = LinOps.TypedCoordinateSpace(Float64, (2, 3))
+    ts_float_bad_sz = LinOps.TypedCoordinateSpace(Float64, (3, 2))
+    cs = CoordinateSpace((2, 3))
+
+    @test size(ts_int) == (2, 3)
+    @test ndims(ts_int) == 2
+    @test eltype(ts_int) == Int
+
+    @test zeros(Int, 2, 3) in ts_int
+    @test !(zeros(Float64, 2, 3) in ts_int)
+    @test !(zeros(Int, 3, 2) in ts_int)
+
+    # Subset relation (\subset / ⊂): same shape and promotable element type.
+    @test LinOps.:(⊂)(ts_int, ts_float)
+    @test !LinOps.:(⊂)(ts_float, ts_int)
+    @test !LinOps.:(⊂)(ts_int, ts_float_bad_sz)
+
+    @test LinOps.:(⊂)(ts_int, cs)
+    @test LinOps.:(⊂)(cs, ts_int)
+
+    @test LinOps.promote_domain(typeof(ts_int), typeof(ts_float)) == LinOps.TypedCoordinateSpace{Float64, 2}
+    @test LinOps.promote_domain(typeof(cs), typeof(ts_float)) == LinOps.TypedCoordinateSpace{Float64, 2}
+    @test LinOps.promote_domain(typeof(ts_int), typeof(cs)) == LinOps.TypedCoordinateSpace{Int, 2}
+
+    cs2 = CoordinateSpace((4, 5))
+    @test LinOps.promote_domain(typeof(cs), typeof(cs2)) == CoordinateSpace{2}
+end
