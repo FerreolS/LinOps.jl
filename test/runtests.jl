@@ -21,4 +21,12 @@ using Test
     catch
         @warn "Skipping GPU tests (GPUArrays/JLArrays not available)"
     end
+
+    # Zygote autodiff tests
+    try
+        using Zygote, FiniteDifferences
+        include("linopautodiff_tests.jl")
+    catch e
+        @warn "Skipping Zygote autodiff tests" exception = e
+    end
 end

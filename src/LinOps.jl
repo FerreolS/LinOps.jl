@@ -3,6 +3,7 @@ module LinOps
 using AbstractFFTs,
     Adapt,
     ArrayTools,
+    ChainRulesCore,
     KernelAbstractions,
     LinearAlgebra,
     StaticArrays

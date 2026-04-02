@@ -156,8 +156,17 @@ function Adapt.adapt_structure(to, A::T) where {T <: LinOp}
     W = Base.typename(T).wrapper
     return W(vals...)
 end
-#=
+
 function apply_adjoint_via_ad(_, _)
-    throw(ArgumentError("DI must be loaded to computed adjoint via automatic differentiation"))
+    throw(ArgumentError("Zygote must be loaded to computed adjoint via automatic differentiation"))
 end
- =#
+
+
+function ChainRulesCore.rrule(::typeof(Base.:*), A::LinOp, v)
+    if applicable(apply_adjoint_, A, v) || applicable(apply_adjoint_!, AbstractArray, A, v)
+        ∂Y(Δy) = (NoTangent(), NoTangent(), adjoint(A) * ChainRulesCore.unthunk(Δy))
+    else
+        return apply_adjoint_via_ad(apply_, A, v)
+    end
+    return A * v, ∂Y
+end
