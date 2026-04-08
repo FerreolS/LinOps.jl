@@ -68,6 +68,8 @@ function Base.:*(left::LinOpAdjoint, right::LinOpDFT)
     return LinOpCompose(left, right)
 end
 
+Base.inv(A::LinOpDFT) = (1 / length(inputspace(A))) * adjoint(A)
+
 
 struct LinOpNFFT{
         I,
@@ -81,7 +83,6 @@ struct LinOpNFFT{
 
     LinOpNFFT(inputspace::I, outputspace::O, plan::F) where {I <: AbstractDomain, O <: AbstractDomain, F} = new{I, O, F}(inputspace, outputspace, plan)
 end
-
 
 function LinOpNFFT(args...; _kwargs...)
     error("Load NonuniformFFTs.jl to use LinOpNFFT")
