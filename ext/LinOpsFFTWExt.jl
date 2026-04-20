@@ -1,6 +1,8 @@
 module LinOpsFFTWExt
+import Adapt
+import Adapt: adapt_structure
 import FFTW
-import FFTW: fftwComplex, fftwReal, plan_brfft, plan_rfft, plan_fft, plan_bfft
+import FFTW: fftwComplex, fftwReal, fftwNumber, plan_brfft, plan_rfft, plan_fft, plan_bfft
 import LinOps
 import LinOps: TypedCoordinateSpace, LinOpDFT, apply_!, apply_adjoint_!, inputsize, outputsize,
     outputtype, LinOpAdjoint
@@ -93,6 +95,53 @@ apply_adjoint_!(y, A::LinOpDFT, x) = FFTW.mul!(y, A.backward, complex(x))
 function Base.summary(A::LinOpDFT{I, O, <:FFTW.FFTWPlan{T}}) where {I, O, T}
     return "LinOpDFT ($T) $(inputsize(A)) -> $(outputsize(A))"
 end
+#= 
+
+function Adapt.adapt_structure(::Type{A}, x::LinOpDFT) where {A <: AbstractArray}
+    return Adapt.adapt_structure(A{eltype(inputspace(x))}, x)
+end
+ =#
+
+function Adapt.adapt_structure(::Type{A}, x::LinOpDFT) where {T <: fftwNumber, A <: AbstractArray{T}}
+    sz = inputsize(x)
+    planning = planning = check_flags(FFTW.MEASURE)
+    timelimit = FFTW.NO_TIMELIMIT
+    # Compute the plans with suitable FFTW flags.  For maximum efficiency, the
+    # transforms are always applied in-place and thus cannot preserve their
+    # inputs.
+
+    if T <: fftwReal
+        forward = plan_rfft(
+            Array{T}(undef, sz);
+            flags = (planning | FFTW.PRESERVE_INPUT),
+            timelimit = timelimit
+        )
+
+        backward = plan_brfft(
+            Array{Complex{T}}(undef, forward.osz), sz[1];
+            flags = (planning | FFTW.DESTROY_INPUT),
+            timelimit = timelimit
+        )
+    else
+        temp = Array{T}(undef, sz)
+        forward = plan_fft(
+            temp; flags = (planning | FFTW.DESTROY_INPUT),
+            timelimit = timelimit
+        )
+        backward = plan_bfft(
+            temp; flags = (planning | FFTW.DESTROY_INPUT),
+            timelimit = timelimit
+        )
+    end
+
+
+    # Build operator.
+    inputspace = TypedCoordinateSpace(T, forward.sz)
+    outputspace = TypedCoordinateSpace(T, forward.osz)
+    return LinOpDFT(inputspace, outputspace, forward, backward)
+
+end
+
 
 #------------------------------------------------------------------------------
 # Utilities borrowed from LazyAlgebra
