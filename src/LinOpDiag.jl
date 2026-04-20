@@ -23,8 +23,23 @@ apply_!(y, A::LinOpDiag, x) = @. y = A.diag * x
 apply_adjoint_!(y, A::LinOpDiag, x) = @. y = conj.(A.diag) * x
 
 # This make A'' == A and not === .Not sure if this is better than the default where A'' === A
-function LinOpAdjoint(A::LinOpDiag)
+#= function LinOpAdjoint(A::LinOpDiag)
     return LinOpDiag(conj.(A.diag))
+end
+ =#
+
+function LinOpCompose(A::D, B::LinOpAdjoint{O,I,D}) where {I,O,D <: LinOpDiag{I,O}}
+    if parent(B) === A
+        return LinOpDiag(abs2.(A.diag))
+    end
+    return LinOpDiag(@. A.diag * conj(parent(B).diag))
+end
+
+function LinOpCompose(A::LinOpAdjoint{I,O,D}, B::D) where {I,O,D <: LinOpDiag{O,I}}
+    if parent(A) === B
+        return LinOpDiag(abs2.(B.diag))
+    end
+    return LinOpDiag(@. B.diag * conj(parent(A).diag))
 end
 
 function LinOpCompose(A::LinOpDiag, B::LinOpDiag)
