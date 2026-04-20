@@ -77,6 +77,7 @@ function LinOpCompose(A::UniformScaling, B::LinOpCompose{I, O, <:UniformScaling}
     return C * B.right
 end
 
+ LinOpAdjoint(A::LinOpCompose) = A.right' * A.left'
 
 function apply_(A::LinOpCompose, x)
     return A.left * (A.right * x)
