@@ -82,6 +82,10 @@ function apply_(A::LinOpCompose, x)
     return A.left * (A.right * x)
 end
 
+function apply_(A::LinOpCompose{I, O, <:UniformScaling}, x) where {I, O}
+    return A.left.λ * (A.right * x)
+end
+
 function apply_!(y, A::LinOpCompose{I, O, <:UniformScaling}, x) where {I, O}
     return apply_!(y, A.right, A.left * x)
 end
