@@ -3,8 +3,8 @@ struct LinOpMapslice{I, O, P, D} <: LinOp{I, O}
     outputspace::O
     operator::P
     dims::D
-    function LinOpMapslice(inputspace::I, outputspace::O, operator::P, dims::NTuple{N, Int}) where {I, O, P, N}
-        dims = SVector{N, Int}(dims)
+    function LinOpMapslice(inputspace::I, outputspace::O, operator::P, dims::Union{NTuple{N, Int},SVector{N, Int}}) where {I, O, P, N}
+        dims isa NTuple && (dims = SVector{N, Int}(dims))
         return new{I, O, P, typeof(dims)}(inputspace, outputspace, operator, dims)
     end
 end
@@ -77,17 +77,18 @@ function LinOpMapslice(sz::NTuple{N, Int}, operators::AbstractArray{<:AbstractMa
     return LinOpMapslice(inputspace, outputspace, operators, tuple(dims...))
 end
 
+Adapt.adapt_structure(to, x::LinOpMapslice{I, O, <:AbstractArray{<:Number}}) where {I, O} = LinOpMapslice(adapt(to, inputspace(x)), adapt(to, outputspace(x)), adapt(to, x.operator), x.dims)
+Adapt.adapt_structure(to, x::LinOpMapslice{I, O, <:AbstractArray}) where {I, O} = LinOpMapslice(adapt(to, inputspace(x)), adapt(to, outputspace(x)), adapt.(to, x.operator), x.dims)
+
 
 function apply_!(y, A::LinOpMapslice{I, O, <:LinOp, SVector{N, Int}}, x) where {N, I, O}
     inputsz = inputsize(A)
     dims = A.dims
     d1 = dims[1]
     ndrange = _mapslice_ndrange(inputsz, d1, N, Val(ndims(I) - N))
-    backend = get_backend(x)
     cout = colons(Val(ndims(outputspace(A.operator))))
     cin = colons(Val(ndims(inputspace(A.operator))))
-    LinOpMapslice_kernel(backend)(y, x, A.operator, cin, cout, d1, ndrange = ndrange)
-    synchronize(backend)
+    _LinOpMapslice(y, x, A.operator, cin, cout, d1, ndrange )
     return y
 end
 
@@ -97,10 +98,8 @@ function apply_!(y, A::LinOpMapslice{I, O, P, D}, x) where {N, I, O, P <: Abstra
     dims = A.dims
     d1 = dims[1]
     ndrange = _mapslice_ndrange(inputsz, d1, N, Val(ndims(I) - N))
-    backend = get_backend(x)
     c = colons(Val(N))
-    LinOpMapslice_kernel(backend)(y, x, A.operator, c, c, d1, ndrange = ndrange)
-    synchronize(backend)
+    _LinOpMapslice(y, x, A.operator, c, c, d1, ndrange)
     return y
 end
 
@@ -110,11 +109,9 @@ function apply_!(y, A::LinOpMapslice{I, O, P, D}, x) where {N, I, O, P <: Abstra
     dims = A.dims
     d1 = dims[1]
     ndrange = _mapslice_ndrange(inputsz, d1, N, Val(ndims(I) - N))
-    backend = get_backend(x)
     cout = colons(Val(ndims(outputspace(first(A.operator)))))
     cin = colons(Val(ndims(inputspace(first(A.operator)))))
-    LinOpMapslice_kernel(backend)(y, x, A.operator, cin, cout, d1, ndrange = ndrange)
-    synchronize(backend)
+    _LinOpMapslice(y, x, A.operator, cin, cout, d1, ndrange)
     return y
 end
 
@@ -123,43 +120,58 @@ end
 
 function apply_adjoint_!(y, A::LinOpMapslice{I, O, P, D}, x) where {N, I, O, P <: LinOp, D <: SVector{N, Int}}
     outputsz = outputsize(A)
-    backend = get_backend(x)
     d1 = A.dims[1]
     M = ndims(outputspace(A.operator))
     ndrange = _mapslice_ndrange(outputsz, d1, M, Val(ndims(I) - N))
     cin = colons(Val(ndims(outputspace(A.operator))))
     cout = colons(Val(ndims(inputspace(A.operator))))
-    LinOpMapslice_kernel(backend)(y, x, A.operator', cin, cout, d1, ndrange = ndrange)
-    synchronize(backend)
+    _LinOpMapslice(y, x, A.operator', cin, cout, d1, ndrange)
     return y
 end
 
 
 function apply_adjoint_!(y, A::LinOpMapslice{I, O, P, D}, x) where {N, I, O, P <: AbstractArray{<:Union{Number, UniformScaling}}, D <: SVector{N, Int}}
     outputsz = outputsize(A)
-    backend = get_backend(x)
     d1 = A.dims[1]
     ndrange = _mapslice_ndrange(outputsz, d1, N, Val(ndims(I) - N))
     c = colons(Val(N))
-    LinOpMapslice_kernel(backend)(y, x, map(adjoint, A.operator), c, c, d1, ndrange = ndrange)
-    synchronize(backend)
+    _LinOpMapslice(y, x, map(adjoint, A.operator), c, c, d1, ndrange )
     return y
 end
 
 
 function apply_adjoint_!(y, A::LinOpMapslice{I, O, P, D}, x) where {N, I, O, P <: AbstractArray, D <: SVector{N, Int}}
     outputsz = outputsize(A)
-    backend = get_backend(x)
     d1 = A.dims[1]
     M = ndims(outputspace(first(A.operator)))
     ndrange = _mapslice_ndrange(outputsz, d1, M, Val(ndims(I) - N))
     cout = colons(Val(ndims(outputspace(first(A.operator)))))
     cin = colons(Val(ndims(inputspace(first(A.operator)))))
-    LinOpMapslice_kernel(backend)(y, x, map(adjoint, A.operator), cin, cout, d1, ndrange = ndrange)
-    synchronize(backend)
+    _LinOpMapslice(y, x, map(adjoint, A.operator), cin, cout, d1, ndrange)
     return y
 end
 
+function _LinOpMapslice(Y, X, A, cin, cout, dims, ndrange)
+    Threads.@threads for I  in CartesianIndices(ndrange)
+        I1 = CartesianIndex(I.I[1:(dims - 1)])
+    I2 = CartesianIndex(I.I[dims:end])
+    #view(Y, I1, colons(Val(ndims(outputspace(A))))..., I2) .= A * view(X, I1, colons(Val(ndims(inputspace(A))))..., I2)
+    mul!(view(Y, I1, cout..., I2), A, view(X, I1, cin..., I2))
+    end
+    #Y[I1, .., I2] .= A * X[I1, .., I2]
+end
+
+function _LinOpMapslice(Y, X, A::AbstractArray, cin, cout, dims, ndrange)
+    Threads.@threads for I  in CartesianIndices(ndrange)
+    I1 = CartesianIndex(I.I[1:(dims - 1)])
+    I2 = CartesianIndex(I.I[dims:end])
+    #view(Y, I1, colons(Val(ndims(outputspace(A))))..., I2) .= A * view(X, I1, colons(Val(ndims(inputspace(A))))..., I2)
+    mul!(view(Y, I1, cout..., I2), A[I], view(X, I1, cin..., I2))
+    end
+
+end
+
+#= 
 
 @kernel function LinOpMapslice_kernel(Y, X, A, cin, cout, dims)
     I = @index(Global, Cartesian)
@@ -180,6 +192,14 @@ end
 
 end
 
+@kernel function LinOpMapslice_kernel(Y, X, A,cin, cout)
+     I = @index(Global, Cartesian)
+    #view(Y, I1, colons(Val(ndims(outputspace(A))))..., I2) .= A * view(X, I1, colons(Val(ndims(inputspace(A))))..., I2)
+   #@show I
+   mul!(view(Y,  I,cout...), A, view(X, I,cin...))
+
+    #Y[I1, .., I2] .= A * X[I1, .., I2]
+end =#
 
 function build_spaces(operators, inputsz, outputsz)
     outputdomain = mapreduce(x -> typeof(outputspace(x)), promote_domain, operators)
