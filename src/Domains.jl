@@ -32,6 +32,7 @@ Base.randn(::Type{T}, sp::AbstractDomain) where {T} = randn(T, size(sp))
 Base.similar(A::AbstractArray, sp::AbstractDomain) = similar(A, size(sp))
 Base.similar(A::AbstractArray, ::Type{T}, sp::AbstractDomain) where {T} = similar(A, T, size(sp))
 
+Adapt.adapt_structure(::Any, x::AbstractDomain) = x
 
 struct CoordinateSpace{N} <: AbstractDomain{N}
     size::NTuple{N, Int}
