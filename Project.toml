@@ -16,11 +16,13 @@ LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [weakdeps]
+CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
 FFTW = "7a1cc6ca-52ef-59f5-83cd-3a7055c09341"
 NonuniformFFTs = "cd96f58b-6017-4a02-bb9e-f4d81626177f"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [extensions]
+LinOpsCUDAFFTWExt = ["CUDA","FFTW"]
 LinOpsFFTWExt = ["FFTW"]
 LinOpsNonuniformFFTsExt = ["NonuniformFFTs"]
 LinOpsZygoteExt = ["Zygote"]
@@ -29,6 +31,7 @@ LinOpsZygoteExt = ["Zygote"]
 AbstractFFTs = "1"
 Adapt = "4"
 ArrayTools = "0.3"
+CUDA = "5"
 ChainRulesCore = "1"
 FFTW = "1"
 KernelAbstractions = "0.9"
