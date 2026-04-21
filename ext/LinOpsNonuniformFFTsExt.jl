@@ -1,4 +1,7 @@
 module LinOpsNonuniformFFTsExt
+using Adapt
+import Adapt.adapt_structure
+using KernelAbstractions
 using LinOps, NonuniformFFTs
 import LinOps: TypedCoordinateSpace, LinOpAdjoint, LinOpNFFT, apply_!, apply_adjoint_!, outputtype, inputtype
 import NonuniformFFTs: PlanNUFFT, exec_type1!, exec_type2!, set_points!
@@ -14,7 +17,8 @@ function LinOpNFFT(
     if T1 != T2
         points = map(p -> convert.(T1, p), points)
     end
-    plan_nufft = PlanNUFFT(T, sz; kwargs...)
+    backend = get_backend(points[1])
+    plan_nufft = PlanNUFFT(T, sz; backend=backend,kwargs...)
     set_points!(plan_nufft, points)
     outputspace = TypedCoordinateSpace(Complex{T1}, size(plan_nufft))
     inputspace = TypedCoordinateSpace(T, (length(points[1]),))
@@ -38,5 +42,22 @@ function apply_adjoint_!(y, A::LinOpNFFT{I, O, <:PlanNUFFT{T, N, M}}, x) where {
     return y
 end
 
+function Adapt.adapt_structure(to, x::LinOpNFFT) 
+    tmp =to(undef,0)
+    T =eltype(tmp)
+    T1 = inputtype(x) <: Complex ? Complex{T} : T
+    backend = get_backend(tmp)
+    sz = size(x.plan)
+    if inputtype(x) <: Real
+        sz[1] = 2 * (sz[1] - 1)
+    end     
+    plan_nufft = PlanNUFFT(T1, sz; backend = backend)
+    points =adapt(to,x.plan.points)
+    set_points!(plan_nufft, points)
+    outputspace = TypedCoordinateSpace(Complex{T}, size(plan_nufft))
+    inputspace = TypedCoordinateSpace(T, (length(points[1]),))
+
+    return LinOpNFFT(inputspace, outputspace, plan_nufft)
+end
 
 end
