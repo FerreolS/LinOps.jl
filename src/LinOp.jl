@@ -20,6 +20,9 @@ inputtype(A::LinOp, x) = typeof(oneunit(eltype(inputspace(A))) * oneunit(eltype(
 inputtype(::LinOp{I}, _) where {T, I <: TypedCoordinateSpace{T}} = T
 outputtype(::LinOp{I, O}, _) where {T, I, O <: TypedCoordinateSpace{T}} = T
 
+inputtype(::LinOp{I}) where {T, I <: TypedCoordinateSpace{T}} = T
+outputtype(::LinOp{I, O}) where {T, I, O <: TypedCoordinateSpace{T}} = T
+
 inputtype(A::UniformScaling, x) = outputtype(A, x)
 inputtype(A::AbstractMatrix, x) = outputtype(A, x)
 
@@ -142,8 +145,6 @@ end
 function apply_adjoint_(A::LinOpAdjoint, x)
     return apply_(parent(A), x)
 end
-
-Adapt.adapt_structure(::Any, x::AbstractDomain) = x
 
 #= function Adapt.adapt_structure(to, A::T) where {T <: LinOp}
     return fmap(Adapt.adapt(to), A; exclude = v -> (v isa AbstractDomain) || (v isa AbstractArray))
