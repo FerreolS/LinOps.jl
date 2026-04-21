@@ -7,8 +7,10 @@ struct LinOpGrad{I, O, D} <: LinOp{I, O}
         offsets = _linopgrad_parse_offsets(offsets, Val(N))
         outputspace = CoordinateSpace((size(inputspace)..., count(>(0), offsets)))
         _linopgrad_validate_offsets_for_size(offsets, size(inputspace), Val(N))
-
         return new{I, typeof(outputspace), typeof(offsets)}(inputspace, outputspace, offsets)
+    end
+    function LinOpGrad(inputspace::I, outputspace::O, offsets::D) where {I <: AbstractDomain, O <: AbstractDomain, D}
+        return new{I, O, D}(inputspace, outputspace, offsets)
     end
 end
 
