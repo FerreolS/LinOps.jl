@@ -3,7 +3,7 @@ struct LinOpMapslice{I, O, P, D} <: LinOp{I, O}
     outputspace::O
     operator::P
     dims::D
-    function LinOpMapslice(inputspace::I, outputspace::O, operator::P, dims::Union{NTuple{N, Int},SVector{N, Int}}) where {I, O, P, N}
+    function LinOpMapslice(inputspace::I, outputspace::O, operator::P, dims::Union{NTuple{N, Int}, SVector{N, Int}}) where {I, O, P, N}
         dims isa NTuple && (dims = SVector{N, Int}(dims))
         return new{I, O, P, typeof(dims)}(inputspace, outputspace, operator, dims)
     end
@@ -88,7 +88,7 @@ function apply_!(y, A::LinOpMapslice{I, O, <:LinOp, SVector{N, Int}}, x) where {
     ndrange = _mapslice_ndrange(inputsz, d1, N, Val(ndims(I) - N))
     cout = colons(Val(ndims(outputspace(A.operator))))
     cin = colons(Val(ndims(inputspace(A.operator))))
-    _LinOpMapslice(y, x, A.operator, cin, cout, d1, ndrange )
+    _LinOpMapslice(y, x, A.operator, cin, cout, d1, ndrange)
     return y
 end
 
@@ -135,7 +135,7 @@ function apply_adjoint_!(y, A::LinOpMapslice{I, O, P, D}, x) where {N, I, O, P <
     d1 = A.dims[1]
     ndrange = _mapslice_ndrange(outputsz, d1, N, Val(ndims(I) - N))
     c = colons(Val(N))
-    _LinOpMapslice(y, x, map(adjoint, A.operator), c, c, d1, ndrange )
+    _LinOpMapslice(y, x, map(adjoint, A.operator), c, c, d1, ndrange)
     return y
 end
 
@@ -152,26 +152,28 @@ function apply_adjoint_!(y, A::LinOpMapslice{I, O, P, D}, x) where {N, I, O, P <
 end
 
 function _LinOpMapslice(Y, X, A, cin, cout, dims, ndrange)
-    Threads.@threads for I  in CartesianIndices(ndrange)
+    for I in CartesianIndices(ndrange)
         I1 = CartesianIndex(I.I[1:(dims - 1)])
-    I2 = CartesianIndex(I.I[dims:end])
-    #view(Y, I1, colons(Val(ndims(outputspace(A))))..., I2) .= A * view(X, I1, colons(Val(ndims(inputspace(A))))..., I2)
-    mul!(view(Y, I1, cout..., I2), A, view(X, I1, cin..., I2))
+        I2 = CartesianIndex(I.I[dims:end])
+        #view(Y, I1, colons(Val(ndims(outputspace(A))))..., I2) .= A * view(X, I1, colons(Val(ndims(inputspace(A))))..., I2)
+        mul!(view(Y, I1, cout..., I2), A, view(X, I1, cin..., I2))
     end
     #Y[I1, .., I2] .= A * X[I1, .., I2]
+    return
 end
 
 function _LinOpMapslice(Y, X, A::AbstractArray, cin, cout, dims, ndrange)
-    Threads.@threads for I  in CartesianIndices(ndrange)
-    I1 = CartesianIndex(I.I[1:(dims - 1)])
-    I2 = CartesianIndex(I.I[dims:end])
-    #view(Y, I1, colons(Val(ndims(outputspace(A))))..., I2) .= A * view(X, I1, colons(Val(ndims(inputspace(A))))..., I2)
-    mul!(view(Y, I1, cout..., I2), A[I], view(X, I1, cin..., I2))
+    for I in CartesianIndices(ndrange)
+        I1 = CartesianIndex(I.I[1:(dims - 1)])
+        I2 = CartesianIndex(I.I[dims:end])
+        #view(Y, I1, colons(Val(ndims(outputspace(A))))..., I2) .= A * view(X, I1, colons(Val(ndims(inputspace(A))))..., I2)
+        mul!(view(Y, I1, cout..., I2), A[I], view(X, I1, cin..., I2))
     end
 
+    return
 end
 
-#= 
+#=
 
 @kernel function LinOpMapslice_kernel(Y, X, A, cin, cout, dims)
     I = @index(Global, Cartesian)
