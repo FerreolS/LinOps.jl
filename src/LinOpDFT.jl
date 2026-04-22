@@ -75,13 +75,13 @@ struct LinOpNFFT{
         I,
         O,
         F,
-        D
+        D,
     } <: LinOp{I, O}
 
     inputspace::I
     outputspace::O
     plan::F             # plan for forward transform
-    dims::D         
+    dims::D
     LinOpNFFT(inputspace::I, outputspace::O, plan::F, dims::D) where {I <: AbstractDomain, O <: AbstractDomain, F, D <: NTuple} = new{I, O, F, D}(inputspace, outputspace, plan, dims)
 end
 

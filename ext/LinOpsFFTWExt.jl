@@ -95,7 +95,7 @@ apply_adjoint_!(y, A::LinOpDFT, x) = FFTW.mul!(y, A.backward, complex(x))
 function Base.summary(A::LinOpDFT{I, O, <:FFTW.FFTWPlan{T}}) where {I, O, T}
     return "LinOpDFT ($T) $(inputsize(A)) -> $(outputsize(A))"
 end
-#= 
+#=
 
 function Adapt.adapt_structure(::Type{A}, x::LinOpDFT) where {A <: AbstractArray}
     return Adapt.adapt_structure(A{eltype(inputspace(x))}, x)
