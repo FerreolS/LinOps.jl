@@ -61,6 +61,13 @@ TypedCoordinateSpace(T::Type, sz::Int) = TypedCoordinateSpace(T, Tuple(sz))
 TypedCoordinateSpace(T::Type) = TypedCoordinateSpace(T, ())
 TypedCoordinateSpace(sp::TypedCoordinateSpace) = sp
 
+Adapt.adapt_structure(_, x::TypedCoordinateSpace) = x
+function Adapt.adapt_structure(::Type{<:AbstractArray{T}}, x::TypedCoordinateSpace{Tx}) where {T, Tx}
+    Tx <: Complex && T <: Real && return TypedCoordinateSpace(Complex{T}, size(x))
+    return TypedCoordinateSpace(T, size(x))
+end
+
+
 Base.eltype(::Type{TypedCoordinateSpace{T, N}}) where {T, N} = T
 Base.eltype(::TypedCoordinateSpace{T, N}) where {T, N} = T
 
