@@ -11,7 +11,6 @@ inputsize(A::LinOp) = size(inputspace(A))
 outputsize(A::LinOp) = size(outputspace(A))
 Base.size(A::LinOp) = (outputsize(A), inputsize(A))
 
-Base.eltype(::LinOp) = Bool
 outputtype(A::LinOp, x) = typeof(oneunit(eltype(outputspace(A))) * oneunit(eltype(x)))
 outputtype(A::UniformScaling, x) = typeof(oneunit(eltype(A)) * oneunit(eltype(x)))
 outputtype(A::AbstractMatrix, x) = typeof(oneunit(eltype(A)) * oneunit(eltype(x)))

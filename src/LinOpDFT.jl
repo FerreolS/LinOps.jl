@@ -29,7 +29,6 @@ function Base.:*(left::LinOpDFT, right::LinOpAdjoint)
     return LinOpCompose(left, right)
 end
 
-Base.eltype(::LinOpDFT) = ComplexF64
 #=
 const _SUPERSCRIPT_DIGITS = Dict(
     '0' => '⁰',

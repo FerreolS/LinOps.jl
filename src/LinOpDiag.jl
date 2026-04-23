@@ -9,7 +9,6 @@ function LinOpDiag(diag::D) where {D <: AbstractArray}
 end
 
 outputspace(A::LinOpDiag) = inputspace(A)
-Base.eltype(A::LinOpDiag) = eltype(A.diag)
 isendomorphism(::LinOpDiag) = true
 
 function Base.summary(A::LinOpDiag)

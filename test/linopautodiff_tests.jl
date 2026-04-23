@@ -14,7 +14,6 @@ function LinOpDiagX(diag::D) where {D <: AbstractArray}
 end
 
 LinOps.outputspace(A::LinOpDiagX) = LinOps.inputspace(A)
-Base.eltype(A::LinOpDiagX) = eltype(A.diag)
 LinOps.isendomorphism(::LinOpDiagX) = true
 LinOps.apply_(A::LinOpDiagX, x) = A.diag .* x
 

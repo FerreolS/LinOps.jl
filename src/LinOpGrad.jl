@@ -17,7 +17,6 @@ end
 LinOpGrad(sz::NTuple{N, Int}; offsets = nothing) where {N} = LinOpGrad(CoordinateSpace(sz); offsets = offsets)
 LinOpGrad(sz::Int; offsets = nothing) = LinOpGrad((sz,); offsets = offsets)
 
-Base.eltype(::LinOpGrad) = Bool
 
 function apply_(A::LinOpGrad, x::AbstractArray{T, N}) where {T, N}
     backend = get_backend(x)
