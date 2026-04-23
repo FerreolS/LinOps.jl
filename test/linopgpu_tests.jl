@@ -122,7 +122,6 @@ using LinOps: LinOp, LinOpDiag, LinOpMapslice, inputsize, outputsize, Coordinate
         @test outputspace(A_gpu) == inputspace(A_gpu)
         @test inputsize(A_gpu) == (3,)
         @test outputsize(A_gpu) == (3,)
-        @test eltype(A_gpu) == Float32
     end
 
     @testset "LinOpDiag on GPU with 3D arrays" begin

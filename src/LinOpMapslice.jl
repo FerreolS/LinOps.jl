@@ -156,8 +156,8 @@ function _LinOpMapslice(Y, X, A, cin, cout, dims, ndrange)
         I1 = CartesianIndex(I.I[1:(dims - 1)])
         I2 = CartesianIndex(I.I[dims:end])
         #view(Y, I1, colons(Val(ndims(outputspace(A))))..., I2) .= A * view(X, I1, colons(Val(ndims(inputspace(A))))..., I2)
-        #mul!(view(Y, I1, cout..., I2), A, view(X, I1, cin..., I2))
-        mul!(Y[I1, cout..., I2], A, X[I1, cin..., I2])
+        mul!(view(Y, I1, cout..., I2), A, view(X, I1, cin..., I2))
+        #mul!(Y[I1, cout..., I2], A, X[I1, cin..., I2])
     end
     #Y[I1, .., I2] .= A * X[I1, .., I2]
     return
