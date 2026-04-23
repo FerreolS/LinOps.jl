@@ -68,7 +68,7 @@ function Base.:*(left::LinOpAdjoint, right::LinOpDFT)
     return LinOpCompose(left, right)
 end
 
-Base.inv(A::LinOpDFT) = (1 / length(inputspace(A))) * adjoint(A)
+Base.inv(A::LinOpDFT) = eltype(A.forward)(1 / length(inputspace(A))) * adjoint(A)
 
 
 struct LinOpNFFT{
