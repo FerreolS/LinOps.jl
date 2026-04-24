@@ -1,4 +1,4 @@
-abstract type LinOp{I, O} end
+abstract type LinOp{I <: AbstractDomain, O <: AbstractDomain} end
 
 
 inputspace(A::LinOp) = A.inputspace
@@ -17,10 +17,10 @@ outputtype(A::AbstractMatrix, x) = typeof(oneunit(eltype(A)) * oneunit(eltype(x)
 inputtype(A::LinOp, x) = typeof(oneunit(eltype(inputspace(A))) * oneunit(eltype(x)))
 
 inputtype(::LinOp{I}, _) where {T, I <: TypedCoordinateSpace{T}} = T
-outputtype(::LinOp{I, O}, _) where {T, I, O <: TypedCoordinateSpace{T}} = T
+outputtype(::LinOp{I, O}, _) where {T, I <: AbstractDomain, O <: TypedCoordinateSpace{T}} = T
 
 inputtype(::LinOp{I}) where {T, I <: TypedCoordinateSpace{T}} = T
-outputtype(::LinOp{I, O}) where {T, I, O <: TypedCoordinateSpace{T}} = T
+outputtype(::LinOp{I, O}) where {T, I <: AbstractDomain, O <: TypedCoordinateSpace{T}} = T
 
 inputtype(A::UniformScaling, x) = outputtype(A, x)
 inputtype(A::AbstractMatrix, x) = outputtype(A, x)
