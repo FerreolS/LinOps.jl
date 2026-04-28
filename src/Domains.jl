@@ -1,3 +1,10 @@
+"""
+    AbstractDomain{N}
+
+Abstract supertype for domain descriptors of dimension `N`.
+
+Domains encode shape (and optionally element type) constraints used by `LinOp` objects.
+"""
 abstract type AbstractDomain{N} end
 
 
@@ -16,6 +23,11 @@ Base.eltype(::Type{<:AbstractDomain}) = Bool
 Base.eltype(::AbstractDomain) = Bool
 
 Base.in(::AbstractArray, ::AbstractDomain) = false
+"""
+    ⊂(a, b)
+
+Domain inclusion predicate. Returns `true` when domain `a` is compatible with `b`.
+"""
 ⊂(::AbstractDomain, ::AbstractDomain) = false
 ⊂(in::AbstractDomain{N}, sp::AbstractDomain{N}) where {N} = (size(sp) == size(in))
 
@@ -34,6 +46,13 @@ Base.similar(A::AbstractArray, ::Type{T}, sp::AbstractDomain) where {T} = simila
 
 Adapt.adapt_structure(::Any, x::AbstractDomain) = x
 
+"""
+    CoordinateSpace
+
+Shape-only domain descriptor.
+
+Use `CoordinateSpace((n1, n2, ...))` when only array dimensions matter.
+"""
 struct CoordinateSpace{N} <: AbstractDomain{N}
     size::NTuple{N, Int}
     CoordinateSpace(sz::NTuple{N, Int}) where {N} = new{N}(sz)
@@ -45,6 +64,11 @@ CoordinateSpace(sp::CoordinateSpace) = sp
 
 Base.in(x::AbstractArray{T, N}, sp::CoordinateSpace{N}) where {T, N} = (size(sp) == size(x))
 
+"""
+    TypedCoordinateSpace{T,N}
+
+Domain descriptor carrying both shape and element type `T`.
+"""
 struct TypedCoordinateSpace{T, N} <: AbstractDomain{N}
     size::NTuple{N, Int}
     TypedCoordinateSpace(T::Type, sz::NTuple{N, Int}) where {N} = new{T, N}(sz)
@@ -79,6 +103,11 @@ Base.randn(sp::TypedCoordinateSpace{T}) where {T} = randn(T, size(sp))
 Base.similar(A::AbstractArray, sp::TypedCoordinateSpace{T}) where {T} = similar(A, T, size(sp))
 
 
+"""
+    promote_domain(A, B)
+
+Return a domain type able to represent values compatible with domains `A` and `B`.
+"""
 promote_domain(::Type{<:AbstractDomain{N}}, ::Type{<:AbstractDomain{N}}) where {N} = CoordinateSpace{N}
 promote_domain(::Type{<:TypedCoordinateSpace{T1, N}}, ::Type{<:TypedCoordinateSpace{T2, N}}) where {T1, T2, N} = TypedCoordinateSpace{promote_type(T1, T2), N}
 promote_domain(::Type{<:AbstractDomain{N}}, ::Type{<:TypedCoordinateSpace{T, N}}) where {T, N} = TypedCoordinateSpace{T, N}

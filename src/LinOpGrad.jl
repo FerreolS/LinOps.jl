@@ -1,3 +1,19 @@
+"""
+    LinOpGrad(inputspace; offsets=nothing)
+    LinOpGrad(sz; offsets=nothing)
+
+Finite-difference gradient operator.
+
+`offsets` controls per-dimension forward-difference offsets (default is `1` in each
+dimension). Nonzero offsets create one output channel per active dimension.
+
+# Examples
+```julia
+A = LinOpGrad((128, 128))
+x = rand(Float32, 128, 128)
+g = A * x
+```
+"""
 struct LinOpGrad{I, O, D} <: LinOp{I, O}
     inputspace::I
     outputspace::O

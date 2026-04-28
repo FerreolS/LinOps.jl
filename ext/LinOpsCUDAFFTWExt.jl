@@ -1,3 +1,9 @@
+"""
+CUDA extension for LinOps FFT operators.
+
+This module provides CUDA-specific `Adapt.adapt_structure` methods so `LinOpDFT`
+instances can be moved to GPU arrays and use CUDA FFT plans.
+"""
 module LinOpsCUDAFFTWExt
 using FFTW
 using CUDA
@@ -7,12 +13,22 @@ using LinOps #: LinOpDFT, inputsize, outputsize, outputtype, inputtype,AbstractD
 using LinOps: TypedCoordinateSpace, AbstractDomain
 
 
+"""
+    Adapt.adapt_structure(::Type{CUDA.CuArray}, x::LinOpDFT)
+
+Adapt a `LinOpDFT` to a CUDA array backend using the operator input scalar type.
+"""
 function Adapt.adapt_structure(::Type{CUDA.CuArray}, x::LinOpDFT)
     return Adapt.adapt_structure(CUDA.CuArray{inputtype(x)}, x)
 end
 
 Adapt.adapt_structure(::CUDA.CuArrayKernelAdaptor, x::LinOps.AbstractDomain) = adapt(CuArray{Float32}, x)
 
+"""
+    Adapt.adapt_structure(::Type{CUDA.CuArray{T}}, x::LinOpDFT)
+
+Adapt a `LinOpDFT` to CUDA with element type `T`, rebuilding compatible FFT plans.
+"""
 function Adapt.adapt_structure(::Type{CUDA.CuArray{T}}, x::LinOpDFT) where {T}
     dims = inputsize(x)
 

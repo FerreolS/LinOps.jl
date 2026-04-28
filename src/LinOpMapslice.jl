@@ -1,3 +1,17 @@
+"""
+    LinOpMapslice(sz, operator, dims)
+
+Apply an operator (or array of operators) independently over slices of an array.
+
+`dims` selects the dimensions consumed by each per-slice operator application.
+
+# Examples
+```julia
+A = LinOpDiag(rand(16))
+M = LinOpMapslice((16, 32), A, 1)
+y = M * rand(16, 32)
+```
+"""
 struct LinOpMapslice{I, O, P, D} <: LinOp{I, O}
     inputspace::I
     outputspace::O

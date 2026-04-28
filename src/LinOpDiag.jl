@@ -1,3 +1,17 @@
+"""
+    LinOpDiag(diag)
+
+Diagonal linear operator with coefficients from `diag`.
+
+Applies elementwise multiplication in forward mode and conjugate multiplication in
+adjoint mode.
+
+# Examples
+```julia
+A = LinOpDiag([1.0, 2.0, 3.0])
+y = A * [10.0, 10.0, 10.0]   # [10.0, 20.0, 30.0]
+```
+"""
 struct LinOpDiag{I, D <: AbstractArray} <: LinOp{I, I}
     inputspace::I
     diag::D

@@ -1,3 +1,9 @@
+"""
+NonuniformFFTs extension for LinOps optional NFFT operators.
+
+This module activates `has_operator(:nfft)` and provides NonuniformFFTs-backed
+`LinOpNFFT` constructors and adaptation methods.
+"""
 module LinOpsNonuniformFFTsExt
 using Adapt
 import Adapt.adapt_structure
@@ -9,6 +15,11 @@ import NonuniformFFTs: PlanNUFFT, exec_type1!, exec_type2!, set_points!
 LinOps.has_operator(::Val{:nfft}) = true
 LinOps.operator_backend(::Val{:nfft}) = :nonuniformffts
 
+"""
+    LinOpNFFT(::Type{T}, sz, points; kwargs...)
+
+Create a NonuniformFFTs-backed NFFT operator using sample `points` and grid shape `sz`.
+"""
 # Real-to-complex FFT.
 function LinOpNFFT(
         ::Type{T},

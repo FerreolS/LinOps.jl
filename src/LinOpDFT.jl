@@ -1,5 +1,13 @@
 import AbstractFFTs: Plan
 
+"""
+    LinOpDFT(...)
+
+Discrete Fourier transform operator.
+
+This operator is optional and provided by the FFTW extension. Call `has_operator(:dft)`
+to check availability in the current session.
+"""
 struct LinOpDFT{
         I, O,
         F <: Plan,     # type of forward plan
@@ -76,6 +84,14 @@ end
 Base.inv(A::LinOpDFT) = eltype(A.forward)(1 / length(inputspace(A))) * adjoint(A)
 
 
+"""
+    LinOpNFFT(...)
+
+Nonuniform FFT operator.
+
+This operator is optional and provided by the NonuniformFFTs extension. Call
+`has_operator(:nfft)` to check availability in the current session.
+"""
 struct LinOpNFFT{
         I,
         O,

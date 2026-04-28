@@ -1,41 +1,98 @@
+"""
+    LinOp{I,O}
+
+Abstract supertype for linear operators mapping from input domain `I` to output domain `O`.
+
+Custom operators should subtype `LinOp` and implement forward application via `apply_`
+or `apply_!`. Implement `apply_adjoint_`/`apply_adjoint_!` for explicit adjoint support.
+"""
 abstract type LinOp{I <: AbstractDomain, O <: AbstractDomain} end
 
 
+"""Return the input domain of operator `A`."""
 inputspace(A::LinOp) = A.inputspace
+"""Return the output domain of operator `A`."""
 outputspace(A::LinOp) = A.outputspace
 
 outputspace(A::AbstractMatrix) = CoordinateSpace(size(A, 1))
 inputspace(A::AbstractMatrix) = CoordinateSpace(size(A, 2))
 
+"""Return the shape tuple of the input domain of `A`."""
 inputsize(A::LinOp) = size(inputspace(A))
+"""Return the shape tuple of the output domain of `A`."""
 outputsize(A::LinOp) = size(outputspace(A))
 Base.size(A::LinOp) = (outputsize(A), inputsize(A))
 
+"""Infer output element type for applying `A` to `x`."""
 outputtype(A::LinOp, x) = typeof(oneunit(eltype(outputspace(A))) * oneunit(eltype(x)))
 outputtype(A::UniformScaling, x) = typeof(oneunit(eltype(A)) * oneunit(eltype(x)))
 outputtype(A::AbstractMatrix, x) = typeof(oneunit(eltype(A)) * oneunit(eltype(x)))
+"""Infer input element type expected by `A` for an input like `x`."""
 inputtype(A::LinOp, x) = typeof(oneunit(eltype(inputspace(A))) * oneunit(eltype(x)))
 
 inputtype(::LinOp{I}, _) where {T, I <: TypedCoordinateSpace{T}} = T
 outputtype(::LinOp{I, O}, _) where {T, I <: AbstractDomain, O <: TypedCoordinateSpace{T}} = T
 
+"""Return input scalar type for typed-domain operators."""
 inputtype(::LinOp{I}) where {T, I <: TypedCoordinateSpace{T}} = T
+"""Return output scalar type for typed-domain operators."""
 outputtype(::LinOp{I, O}) where {T, I <: AbstractDomain, O <: TypedCoordinateSpace{T}} = T
 
 inputtype(A::UniformScaling, x) = outputtype(A, x)
 inputtype(A::AbstractMatrix, x) = outputtype(A, x)
 
 
+"""Return `true` when `A` maps a domain to itself."""
 isendomorphism(A::LinOp) = inputspace(A) === outputspace(A)
 isendomorphism(::UniformScaling) = true
 
 
 # Optional operator capability checks.
+"""
+    has_operator(name::Symbol)
+    has_operator(::Val{name})
+
+Return whether an optional operator family (for example `:dft` or `:nfft`) is available.
+"""
 has_operator(::Val) = false
 has_operator(name::Symbol) = has_operator(Val(name))
 
+"""
+    operator_backend(name::Symbol)
+    operator_backend(::Val{name})
+
+Return the active backend for an optional operator family, or `:none`.
+"""
 operator_backend(::Val) = :none
 operator_backend(name::Symbol) = operator_backend(Val(name))
+
+"""
+    apply_(A, x)
+
+Allocate-and-apply extension hook for custom `LinOp` implementations.
+"""
+function apply_ end
+
+"""
+    apply_!(y, A, x)
+
+In-place forward-application extension hook for custom `LinOp` implementations.
+"""
+function apply_! end
+
+"""
+    apply_adjoint_(A, x)
+
+Allocate-and-apply extension hook for adjoint action.
+"""
+function apply_adjoint_ end
+
+"""
+    apply_adjoint_!(y, A, x)
+
+In-place adjoint-application extension hook.
+"""
+function apply_adjoint_! end
 
 
 function Base.:(==)(a::LinOp, b::LinOp)
@@ -101,6 +158,13 @@ end
 
 ## Adjoint
 
+"""
+    LinOpAdjoint
+
+Wrapper type representing the adjoint of a linear operator.
+
+Construct with `adjoint(A)` or `A'`.
+"""
 struct LinOpAdjoint{I, O, A} <: LinOp{I, O}
     parent::A
     LinOpAdjoint(A::LinOp{O, I}) where {I, O} = new{I, O, typeof(A)}(A)

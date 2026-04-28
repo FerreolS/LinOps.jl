@@ -1,3 +1,9 @@
+"""
+FFTW extension for LinOps optional DFT operators.
+
+This module activates `has_operator(:dft)` and provides FFTW-backed `LinOpDFT`
+constructors and array adaptation methods.
+"""
 module LinOpsFFTWExt
 import Adapt
 import Adapt: adapt_structure
@@ -17,6 +23,11 @@ const PLANNING = (
 )
 
 
+"""
+    LinOpDFT(::Type{T}, sz; dims=1:N, timelimit=FFTW.NO_TIMELIMIT, flags=FFTW.MEASURE)
+
+Create an FFTW-backed real-to-complex DFT operator for array shape `sz`.
+"""
 # Real-to-complex FFT.
 function LinOpDFT(
         ::Type{T},
@@ -54,6 +65,11 @@ function LinOpDFT(
 end
 
 
+"""
+    LinOpDFT(::Type{T}, sz; dims=1:N, timelimit=FFTW.NO_TIMELIMIT, flags=FFTW.MEASURE)
+
+Create an FFTW-backed complex-to-complex DFT operator for array shape `sz`.
+"""
 # Complex-to-complex FFT.
 function LinOpDFT(
         ::Type{T},

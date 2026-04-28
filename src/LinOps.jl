@@ -1,3 +1,15 @@
+"""
+    LinOps
+
+Linear-operator toolkit with explicit input/output domains.
+
+`LinOps` provides composable linear operators (`LinOp` subtypes), algebra on operators
+(`*`, `+`, adjoint, inverse when available), and optional backend-dependent operators
+such as `LinOpDFT` and `LinOpNFFT`.
+
+The package also exposes public extension points so users can define custom operators by
+subtyping `LinOp` and implementing `apply_` / `apply_!` and adjoint variants.
+"""
 module LinOps
 
 using AbstractFFTs,
@@ -12,6 +24,10 @@ import LinearAlgebra:
     mul!,
     I,
     UniformScaling
+
+@doc "Identity operator from `LinearAlgebra` used in LinOps operator algebra." I
+@doc "Uniform-scaling operator type from `LinearAlgebra` used in LinOps compositions and sums." UniformScaling
+@doc "In-place linear application from `LinearAlgebra`; LinOps extends it for `LinOp` objects." mul!
 
 export I,
     has_operator,
