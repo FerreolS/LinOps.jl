@@ -14,6 +14,8 @@ import LinearAlgebra:
     UniformScaling
 
 export I,
+    has_operator,
+    operator_backend,
     LinOp,
     LinOpDFT,
     LinOpDiag,

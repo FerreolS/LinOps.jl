@@ -14,7 +14,13 @@ struct LinOpDFT{
 end
 
 function LinOpDFT(args...; _kwargs...)
-    error("Load FFTW to use LinOpDFT")
+    throw(
+        ArgumentError(
+            "LinOpDFT is optional and requires FFTW. " *
+                "Load FFTW in your session (using FFTW) so LinOpsFFTWExt activates. " *
+                "You can check availability with has_operator(:dft)."
+        )
+    )
 end
 
 
@@ -85,5 +91,11 @@ struct LinOpNFFT{
 end
 
 function LinOpNFFT(args...; _kwargs...)
-    error("Load NonuniformFFTs.jl to use LinOpNFFT")
+    throw(
+        ArgumentError(
+            "LinOpNFFT is optional and requires NonuniformFFTs. " *
+                "Load NonuniformFFTs in your session (using NonuniformFFTs) so LinOpsNonuniformFFTsExt activates. " *
+                "You can check availability with has_operator(:nfft)."
+        )
+    )
 end

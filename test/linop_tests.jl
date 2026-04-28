@@ -63,3 +63,13 @@ end
 
     @test_throws ArgumentError A' * x
 end
+
+@testset "Optional operator capability API" begin
+    @test LinOps.has_operator(:dft) isa Bool
+    @test LinOps.has_operator(:nfft) isa Bool
+    @test LinOps.has_operator(:something_else) == false
+
+    @test LinOps.operator_backend(:dft) isa Symbol
+    @test LinOps.operator_backend(:nfft) isa Symbol
+    @test LinOps.operator_backend(:something_else) == :none
+end

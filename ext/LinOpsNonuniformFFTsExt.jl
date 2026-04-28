@@ -6,6 +6,9 @@ using LinOps, NonuniformFFTs
 import LinOps: TypedCoordinateSpace, LinOpAdjoint, LinOpNFFT, apply_!, apply_adjoint_!, outputtype, inputtype
 import NonuniformFFTs: PlanNUFFT, exec_type1!, exec_type2!, set_points!
 
+LinOps.has_operator(::Val{:nfft}) = true
+LinOps.operator_backend(::Val{:nfft}) = :nonuniformffts
+
 # Real-to-complex FFT.
 function LinOpNFFT(
         ::Type{T},

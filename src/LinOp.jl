@@ -29,6 +29,15 @@ inputtype(A::AbstractMatrix, x) = outputtype(A, x)
 isendomorphism(A::LinOp) = inputspace(A) === outputspace(A)
 isendomorphism(::UniformScaling) = true
 
+
+# Optional operator capability checks.
+has_operator(::Val) = false
+has_operator(name::Symbol) = has_operator(Val(name))
+
+operator_backend(::Val) = :none
+operator_backend(name::Symbol) = operator_backend(Val(name))
+
+
 function Base.:(==)(a::LinOp, b::LinOp)
     if typeof(a) != typeof(b)
         return false

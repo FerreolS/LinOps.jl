@@ -7,6 +7,9 @@ import LinOps
 import LinOps: TypedCoordinateSpace, LinOpDFT, apply_!, apply_adjoint_!, inputsize, outputsize,
     outputtype, LinOpAdjoint
 
+LinOps.has_operator(::Val{:dft}) = true
+LinOps.operator_backend(::Val{:dft}) = :fftw
+
 
 const PLANNING = (
     FFTW.ESTIMATE | FFTW.MEASURE | FFTW.PATIENT |
