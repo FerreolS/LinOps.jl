@@ -5,7 +5,7 @@ using LinOps: LinOpMapslice, LinOpDiag, inputsize, outputsize
     sz = (2, 5, 3)
     d = randn(5)
     D = LinOpDiag(d)
-    M = LinOpMapslice(sz, D, 2)
+    M = LinOpMapslice(sz, D; dims = 2)
 
     @test inputsize(M) == sz
     @test outputsize(M) == sz
@@ -30,7 +30,7 @@ end
     sz = (2, 5, 3)
     d = randn(ComplexF64, 5)
     D = LinOpDiag(d)
-    M = LinOpMapslice(sz, D, 2)
+    M = LinOpMapslice(sz, D; dims = 2)
 
     x = randn(ComplexF64, sz...)
     y = M' * x
@@ -50,7 +50,7 @@ end
 @testset "LinOpMapslice - array of LinOp operators" begin
     sz = (2, 5, 3)
     ops = [LinOpDiag(randn(5)) for _ in 1:sz[1], _ in 1:sz[3]]
-    M = LinOpMapslice(sz, ops, 2)
+    M = LinOpMapslice(sz, ops; dims = 2)
 
     x = randn(sz...)
     y = M * x
@@ -75,7 +75,7 @@ end
     sz = (2, 5, 3)
 
     mats = [randn(3, 5) for _ in 1:sz[1], _ in 1:sz[3]]
-    Mmat = LinOpMapslice(sz, mats, 2)
+    Mmat = LinOpMapslice(sz, mats; dims = 2)
 
     x = randn(sz...)
     y = Mmat * x
@@ -88,7 +88,7 @@ end
     @test y ≈ expected_mat
 
     scalars = randn(ComplexF64, sz[1], sz[3])
-    Mnum = LinOpMapslice(sz, scalars, 2)
+    Mnum = LinOpMapslice(sz, scalars; dims = 2)
 
     x2 = randn(ComplexF64, sz...)
     y2 = Mnum * x2
@@ -106,7 +106,7 @@ end
     @test y2_adj ≈ expected_num_adj
 
     us = [complex(randn(), randn()) * I for _ in 1:sz[1], _ in 1:sz[3]]
-    Mus = LinOpMapslice(sz, us, 2)
+    Mus = LinOpMapslice(sz, us; dims = 2)
 
     y3 = Mus * x2
     expected_us = similar(x2)
@@ -129,4 +129,35 @@ end
 
     ops = [LinOpDiag(randn(5)) for _ in 1:2, _ in 1:2]
     @test_throws ArgumentError LinOpMapslice((2, 5, 3), ops, [2])
+end
+
+@testset "LinOpMapslice - keyword dims and normalization" begin
+    sz = (2, 5, 3)
+    D = LinOpDiag(randn(5))
+    x = randn(sz...)
+
+    M_positional = LinOpMapslice(sz, D, 2)
+    M_keyword = LinOpMapslice(sz, D; dims = 2)
+    M_tuple = LinOpMapslice(sz, D; dims = (2,))
+    M_vector = LinOpMapslice(sz, D; dims = [2])
+
+    @test M_keyword * x ≈ M_positional * x
+    @test M_tuple * x ≈ M_positional * x
+    @test M_vector * x ≈ M_positional * x
+
+    scalars = randn(sz[3])
+    x2 = randn(sz...)
+    M_multi_keyword = LinOpMapslice(sz, scalars; dims = (1, 2))
+    M_multi_vector = LinOpMapslice(sz, scalars; dims = [1, 2])
+
+    expected = similar(x2)
+    for k in axes(x2, 3)
+        expected[:, :, k] .= scalars[k] .* view(x2, :, :, k)
+    end
+
+    @test M_multi_keyword * x2 ≈ expected
+    @test M_multi_vector * x2 ≈ expected
+
+    @test_throws ArgumentError LinOpMapslice(sz, scalars; dims = (1, 3))
+    @test_throws ArgumentError LinOpMapslice(sz, scalars; dims = (2, 1))
 end

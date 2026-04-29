@@ -148,7 +148,7 @@ end
         d_cpu = randn(5)
         x_cpu = randn(sz...)
         D_cpu = LinOpDiag(d_cpu)
-        M_cpu = LinOpMapslice(sz, D_cpu, 2)
+        M_cpu = LinOpMapslice(sz, D_cpu; dims = 2)
         y_cpu = similar(x_cpu)
 
         # Direct computation without KernelAbstractions
@@ -166,7 +166,7 @@ end
         d_cpu = randn(ComplexF64, 5)
         x_cpu = randn(ComplexF64, sz...)
         D_cpu = LinOpDiag(d_cpu)
-        M_cpu = LinOpMapslice(sz, D_cpu, 2)
+        M_cpu = LinOpMapslice(sz, D_cpu; dims = 2)
 
         y_expected = similar(x_cpu)
         for i in axes(x_cpu, 1), k in axes(x_cpu, 3)
@@ -181,7 +181,7 @@ end
         sz = (2, 5, 3)
         d_gpu = JLArray(randn(5))
         D_gpu = LinOpDiag(d_gpu)
-        M_gpu = LinOpMapslice(sz, D_gpu, 2)
+        M_gpu = LinOpMapslice(sz, D_gpu; dims = 2)
 
         @test inputsize(M_gpu) == sz
         @test outputsize(M_gpu) == sz

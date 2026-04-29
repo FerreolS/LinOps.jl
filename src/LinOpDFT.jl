@@ -5,8 +5,9 @@ import AbstractFFTs: Plan
 
 Discrete Fourier transform operator.
 
-This operator is optional and provided by the FFTW extension. Call `has_operator(:dft)`
-to check availability in the current session.
+This operator is optional and provided by the FFTW extension. Call
+`has_operator(:dft)` or `has_operator(LinOpDFT)` to check availability in the
+current session.
 """
 struct LinOpDFT{
         I, O,
@@ -21,12 +22,15 @@ struct LinOpDFT{
     # unitary::Bool ?
 end
 
+has_operator(::Type{<:LinOpDFT}) = has_operator(:dft)
+operator_backend(::Type{<:LinOpDFT}) = operator_backend(:dft)
+
 function LinOpDFT(args...; _kwargs...)
     throw(
         ArgumentError(
             "LinOpDFT is optional and requires FFTW. " *
                 "Load FFTW in your session (using FFTW) so LinOpsFFTWExt activates. " *
-                "You can check availability with has_operator(:dft)."
+                "You can check availability with has_operator(:dft) or has_operator(LinOpDFT)."
         )
     )
 end
@@ -90,7 +94,8 @@ Base.inv(A::LinOpDFT) = eltype(A.forward)(1 / length(inputspace(A))) * adjoint(A
 Nonuniform FFT operator.
 
 This operator is optional and provided by the NonuniformFFTs extension. Call
-`has_operator(:nfft)` to check availability in the current session.
+`has_operator(:nfft)` or `has_operator(LinOpNFFT)` to check availability in the
+current session.
 """
 struct LinOpNFFT{
         I,
@@ -106,12 +111,15 @@ struct LinOpNFFT{
     LinOpNFFT(inputspace::I, outputspace::O, plan::F, dims::D) where {I <: AbstractDomain, O <: AbstractDomain, F, D <: NTuple} = new{I, O, F, D}(inputspace, outputspace, plan, dims)
 end
 
+has_operator(::Type{<:LinOpNFFT}) = has_operator(:nfft)
+operator_backend(::Type{<:LinOpNFFT}) = operator_backend(:nfft)
+
 function LinOpNFFT(args...; _kwargs...)
     throw(
         ArgumentError(
             "LinOpNFFT is optional and requires NonuniformFFTs. " *
                 "Load NonuniformFFTs in your session (using NonuniformFFTs) so LinOpsNonuniformFFTsExt activates. " *
-                "You can check availability with has_operator(:nfft)."
+                "You can check availability with has_operator(:nfft) or has_operator(LinOpNFFT)."
         )
     )
 end

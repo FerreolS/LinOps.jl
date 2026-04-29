@@ -1,5 +1,5 @@
 """
-    LinOpMapslice(sz, operator, dims)
+    LinOpMapslice(sz, operator; dims)
 
 Apply an operator (or array of operators) independently over slices of an array.
 
@@ -8,7 +8,7 @@ Apply an operator (or array of operators) independently over slices of an array.
 # Examples
 ```julia
 A = LinOpDiag(rand(16))
-M = LinOpMapslice((16, 32), A, 1)
+M = LinOpMapslice((16, 32), A; dims=1)
 y = M * rand(16, 32)
 ```
 """
@@ -26,12 +26,30 @@ end
 outputtype(A::LinOpMapslice{I, O, <:LinOp}, x) where {I, O} = outputtype(A.operator, x)
 outputtype(A::LinOpAdjoint{O, I, <:LinOpMapslice{I, O, <:LinOp}}, x) where {I, O} = outputtype(adjoint(parent(A).operator), x)
 
-LinOpMapslice(sz::NTuple, operator, dims::NTuple) = LinOpMapslice(sz, operator, collect(dims))
-LinOpMapslice(sz::NTuple, operator, dims::Int) = LinOpMapslice(sz, operator, collect((dims,)))
+LinOpMapslice(sz::NTuple, operator; dims) = LinOpMapslice(sz, operator, _mapslice_dims_tuple(dims))
 
-function LinOpMapslice(sz::NTuple, operator::LinOp{I, O}, dims::Vector{Int}) where {I, O}
-    maximum(dims) <= length(sz) || throw(ArgumentError("Selected dimensions exceed the number of dimensions in the input space"))
-    sz[dims] == inputsize(operator) || throw(ArgumentError("The size of the operator does not match the selected dimensions"))
+LinOpMapslice(sz::NTuple, operator, dims::Integer) = LinOpMapslice(sz, operator; dims)
+LinOpMapslice(sz::NTuple, operator, dims::NTuple{N, <:Integer}) where {N} = LinOpMapslice(sz, operator; dims)
+LinOpMapslice(sz::NTuple, operator, dims::AbstractVector{<:Integer}) = LinOpMapslice(sz, operator; dims)
+
+_mapslice_dims_tuple(dims::Integer) = (Int(dims),)
+_mapslice_dims_tuple(dims::NTuple{N, <:Integer}) where {N} = ntuple(i -> Int(dims[i]), Val(N))
+_mapslice_dims_tuple(dims::SVector{N, <:Integer}) where {N} = ntuple(i -> Int(dims[i]), Val(N))
+_mapslice_dims_tuple(dims::AbstractVector{<:Integer}) = Tuple(Int.(dims))
+
+function _validate_mapslice_dims(sz::NTuple, dims::NTuple{N, Int}) where {N}
+    N > 0 || throw(ArgumentError("At least one dimension must be selected"))
+    all(dim -> dim > 0, dims) || throw(ArgumentError("Selected dimensions must be positive"))
+    length(unique(dims)) == N || throw(ArgumentError("Selected dimensions must be unique"))
+    issorted(dims) || throw(ArgumentError("Selected dimensions must be sorted in ascending order"))
+    dims[end] <= length(sz) || throw(ArgumentError("Selected dimensions exceed the number of dimensions in the input space"))
+    dims == ntuple(i -> dims[1] + i - 1, Val(N)) || throw(ArgumentError("Selected dimensions must form a contiguous block"))
+    return collect(dims)
+end
+
+function LinOpMapslice(sz::NTuple, operator::LinOp{I, O}, dims::NTuple{N, Int}) where {I, O, N}
+    dimsvec = _validate_mapslice_dims(sz, dims)
+    sz[dimsvec] == inputsize(operator) || throw(ArgumentError("The size of the operator does not match the selected dimensions"))
 
     if I <: TypedCoordinateSpace
         inputspace = TypedCoordinateSpace(eltype(I), sz)
@@ -49,13 +67,13 @@ function LinOpMapslice(sz::NTuple, operator::LinOp{I, O}, dims::Vector{Int}) whe
     return LinOpMapslice(inputspace, outputspace, operator, tuple(dims...))
 end
 
-function LinOpMapslice(sz::NTuple{N, Int}, operators::AbstractArray{<:LinOp}, dims::Vector{Int}) where {N}
-    maximum(dims) <= length(sz) || throw(ArgumentError("Selected dimensions exceed the number of dimensions in the input space"))
+function LinOpMapslice(sz::NTuple{N, Int}, operators::AbstractArray{<:LinOp}, dims::NTuple{M, Int}) where {N, M}
+    dimsvec = _validate_mapslice_dims(sz, dims)
     mapreduce(x -> outputsize(first(operators)) == outputsize(x), &, operators) || throw(ArgumentError("All operators in the array should have the same output size"))
     mapreduce(x -> inputsize(first(operators)) == inputsize(x), &, operators) || throw(ArgumentError("All operators in the array should have the same input size"))
-    sz[dims] == inputsize(first(operators)) || throw(ArgumentError("The size of the operator does not match the selected dimensions"))
+    sz[dimsvec] == inputsize(first(operators)) || throw(ArgumentError("The size of the operator does not match the selected dimensions"))
     remainingdims = trues(N)
-    remainingdims[dims] .= false
+    remainingdims[dimsvec] .= false
     sz[remainingdims] == size(operators) || throw(ArgumentError("The number of operators should match the size of the selected dimensions"))
 
     outputsz = (sz[1:(dims[1] - 1)]..., outputsize(first(operators))..., sz[(dims[end] + 1):length(sz)]...)
@@ -65,10 +83,10 @@ function LinOpMapslice(sz::NTuple{N, Int}, operators::AbstractArray{<:LinOp}, di
 end
 
 
-function LinOpMapslice(sz::NTuple{N, Int}, operators::AbstractArray{<:Union{Number, UniformScaling}}, dims::Vector{Int}) where {N}
-    maximum(dims) <= length(sz) || throw(ArgumentError("Selected dimensions exceed the number of dimensions in the input space"))
+function LinOpMapslice(sz::NTuple{N, Int}, operators::AbstractArray{<:Union{Number, UniformScaling}}, dims::NTuple{M, Int}) where {N, M}
+    dimsvec = _validate_mapslice_dims(sz, dims)
     remainingdims = trues(N)
-    remainingdims[dims] .= false
+    remainingdims[dimsvec] .= false
     sz[remainingdims] == size(operators) || throw(ArgumentError("The number of operators should match the size of the selected dimensions"))
 
     inputspace = CoordinateSpace(sz)
@@ -76,14 +94,14 @@ function LinOpMapslice(sz::NTuple{N, Int}, operators::AbstractArray{<:Union{Numb
     return LinOpMapslice(inputspace, outputspace, operators, tuple(dims...))
 end
 
-function LinOpMapslice(sz::NTuple{N, Int}, operators::AbstractArray{<:AbstractMatrix}, dims::Vector{Int}) where {N}
-    maximum(dims) <= length(sz) || throw(ArgumentError("Selected dimensions exceed the number of dimensions in the input space"))
+function LinOpMapslice(sz::NTuple{N, Int}, operators::AbstractArray{<:AbstractMatrix}, dims::NTuple{M, Int}) where {N, M}
+    dimsvec = _validate_mapslice_dims(sz, dims)
     length(dims) == 1 || throw(ArgumentError("Only one dimension can be selected for matrix operators"))
     remainingdims = trues(N)
-    remainingdims[dims] .= false
+    remainingdims[dimsvec] .= false
     sz[remainingdims] == size(operators) || throw(ArgumentError("The number of operators should match the size of the selected dimensions"))
 
-    sz[dims] == tuple(size(first(operators), 2)) || throw(ArgumentError("The size of the operator does not match the selected dimension"))
+    sz[dimsvec] == tuple(size(first(operators), 2)) || throw(ArgumentError("The size of the operator does not match the selected dimension"))
     outputsz = (sz[1:(dims[1] - 1)]..., size(first(operators), 1), sz[(dims[1] + 1):length(sz)]...)
 
     inputspace = CoordinateSpace(sz)

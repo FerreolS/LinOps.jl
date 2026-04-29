@@ -51,6 +51,8 @@ isendomorphism(::UniformScaling) = true
 """
     has_operator(name::Symbol)
     has_operator(::Val{name})
+    has_operator(::Type{<:LinOp})
+    has_operator(A::LinOp)
 
 Return whether an optional operator family (for example `:dft` or `:nfft`) is available.
 """
@@ -60,11 +62,19 @@ has_operator(name::Symbol) = has_operator(Val(name))
 """
     operator_backend(name::Symbol)
     operator_backend(::Val{name})
+    operator_backend(::Type{<:LinOp})
+    operator_backend(A::LinOp)
 
 Return the active backend for an optional operator family, or `:none`.
 """
 operator_backend(::Val) = :none
 operator_backend(name::Symbol) = operator_backend(Val(name))
+
+has_operator(::Type{<:LinOp}) = false
+has_operator(A::LinOp) = has_operator(typeof(A))
+
+operator_backend(::Type{<:LinOp}) = :none
+operator_backend(A::LinOp) = operator_backend(typeof(A))
 
 """
     apply_(A, x)
