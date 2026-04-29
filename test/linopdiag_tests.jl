@@ -180,3 +180,18 @@ end
     @test S0 == UniformScaling(0)
     @test S0 * x == zero.(x)
 end
+
+@testset "LinOpDiag - adjoint composition branches" begin
+    d = ComplexF64[1 + 2im, 3 - im, 2 + 0im]
+    A = LinOpDiag(d)
+    x = ComplexF64[1 - im, 2 + im, -3 + 2im]
+
+    P1 = A * A'
+    @test P1 * x ≈ abs2.(d) .* x
+
+    P2 = A' * A
+    @test P2 * x ≈ abs2.(d) .* x
+
+    @test (@inferred(inv(A))) isa LinOpDiag
+    @test (@inferred(A^2)) isa LinOpDiag
+end

@@ -1,5 +1,5 @@
-using LinearAlgebra: mul!
-using LinOps: LinOp, CoordinateSpace
+using LinearAlgebra: I, UniformScaling, mul!
+using LinOps: LinOp, LinOpDiag, CoordinateSpace, inputsize, outputsize, inputspace, outputspace
 import LinOps: apply_, apply_adjoint_
 
 struct ApplyOnlyOp <: LinOp{CoordinateSpace{1}, CoordinateSpace{1}}
@@ -76,4 +76,37 @@ end
     @test LinOps.operator_backend(:something_else) == :none
     @test LinOps.operator_backend(LinOps.LinOpDFT) == LinOps.operator_backend(:dft)
     @test LinOps.operator_backend(LinOps.LinOpNFFT) == LinOps.operator_backend(:nfft)
+end
+
+@testset "Operations simplification branches" begin
+    A = ApplyOnlyOp(3)
+    D = LinOpDiag([2.0, 3.0, 4.0])
+
+    @test (A / A) === I
+    @test (A \ A) === I
+
+    @test (0 * A) == 0
+    @test (1 * A) === A
+
+    C = UniformScaling(2) * A
+    @test C isa LinOp
+    @test (C * [1.0, 2.0, 3.0]) == 4 .* [1.0, 2.0, 3.0]
+
+    @test (1 * D) === D
+    @test (0 * D) == UniformScaling(0)
+    @test @inferred(D * [1.0, 2.0, 3.0]) == [2.0, 6.0, 12.0]
+end
+
+@testset "LinOp display and adjoint forwarding" begin
+    D = LinOpDiag([1.0, 2.0, 3.0])
+    s = sprint(show, MIME("text/plain"), D)
+    @test occursin("Linear Operator:", s)
+    @test occursin("LinOpDiag", s)
+
+    AD = D'
+    @test occursin("LinOpAdjoint", summary(AD))
+    @test inputsize(AD) == outputsize(D)
+    @test outputsize(AD) == inputsize(D)
+    @test inputspace(AD) == outputspace(D)
+    @test outputspace(AD) == inputspace(D)
 end

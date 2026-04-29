@@ -158,6 +158,8 @@ end
     @test M_multi_keyword * x2 ≈ expected
     @test M_multi_vector * x2 ≈ expected
 
-    @test_throws ArgumentError LinOpMapslice(sz, scalars; dims = (1, 3))
-    @test_throws ArgumentError LinOpMapslice(sz, scalars; dims = (2, 1))
+    @test_throws "Selected dimensions must form a contiguous block" LinOpMapslice(sz, scalars; dims = (1, 3))
+    @test_throws "Selected dimensions must be sorted in ascending order" LinOpMapslice(sz, scalars; dims = (2, 1))
+    @test_throws "At least one dimension must be selected" LinOpMapslice(sz, scalars; dims = Int[])
+    @test_throws "Selected dimensions must be unique" LinOpMapslice(sz, scalars; dims = (1, 1))
 end

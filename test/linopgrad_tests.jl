@@ -115,7 +115,9 @@ end
 
 @testset "LinOpGrad - Custom offsets validation" begin
     x = randn(3, 4, 5)
-    @test_throws ArgumentError LinOpGrad(size(x); offsets = [1, 2])
-    @test_throws ArgumentError LinOpGrad(size(x); offsets = [1, -1, 0])
-    @test_throws ArgumentError LinOpGrad(size(x); offsets = [4, 0, 0]) * x
+    @test_throws "LinOpGrad offsets must have length 3" LinOpGrad(size(x); offsets = [1, 2])
+    @test_throws "LinOpGrad offsets offsets must be >= 0" LinOpGrad(size(x); offsets = [1, -1, 0])
+    @test_throws "LinOpGrad offsets offset along dimension 1 is 4 but size is 3" LinOpGrad(size(x); offsets = [4, 0, 0])
+
+    @test LinOpGrad(size(x); offsets = [1, 1, 0]) isa LinOp
 end
