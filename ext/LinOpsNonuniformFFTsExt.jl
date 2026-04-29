@@ -5,12 +5,13 @@ This module activates `has_operator(:nfft)` and provides NonuniformFFTs-backed
 `LinOpNFFT` constructors and adaptation methods.
 """
 module LinOpsNonuniformFFTsExt
-using Adapt
-import Adapt.adapt_structure
-using KernelAbstractions
-using LinOps, NonuniformFFTs
-import LinOps: TypedCoordinateSpace, LinOpAdjoint, LinOpNFFT, apply_!, apply_adjoint_!, outputtype, inputtype
+import LinOps: LinOpNFFT, TypedCoordinateSpace, inputtype
 import NonuniformFFTs: PlanNUFFT, exec_type1!, exec_type2!, set_points!
+
+using Adapt
+using KernelAbstractions
+using LinOps
+using NonuniformFFTs
 
 LinOps.has_operator(::Val{:nfft}) = true
 LinOps.operator_backend(::Val{:nfft}) = :nonuniformffts
@@ -47,11 +48,11 @@ function Base.show(io::IO, ::MIME"text/plain", A::LinOpNFFT)
     return
 end
 
-function apply_!(y, A::LinOpNFFT{I, O, <:PlanNUFFT{T, N, M}}, x) where {T, N, M, I, O}
+function LinOps.apply_!(y, A::LinOpNFFT{I, O, <:PlanNUFFT{T, N, M}}, x) where {T, N, M, I, O}
     return exec_type1!(y, A.plan, x)
 end
 
-function apply_adjoint_!(y, A::LinOpNFFT{I, O, <:PlanNUFFT{T, N, M}}, x) where {T, N, M, I, O}
+function LinOps.apply_adjoint_!(y, A::LinOpNFFT{I, O, <:PlanNUFFT{T, N, M}}, x) where {T, N, M, I, O}
     exec_type2!(y, A.plan, x)  # returns Tuple{output...}; discard and return y directly
     return y
 end

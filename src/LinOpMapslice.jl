@@ -43,7 +43,7 @@ function _validate_mapslice_dims(sz::NTuple, dims::NTuple{N, Int}) where {N}
     length(unique(dims)) == N || throw(ArgumentError("Selected dimensions must be unique"))
     issorted(dims) || throw(ArgumentError("Selected dimensions must be sorted in ascending order"))
     dims[end] <= length(sz) || throw(ArgumentError("Selected dimensions exceed the number of dimensions in the input space"))
-    dims == ntuple(i -> dims[1] + i - 1, Val(N)) || throw(ArgumentError("Selected dimensions must form a contiguous block"))
+    isequal(dims, ntuple(i -> dims[1] + i - 1, Val(N))) || throw(ArgumentError("Selected dimensions must form a contiguous block"))
     return collect(dims)
 end
 
@@ -101,7 +101,7 @@ function LinOpMapslice(sz::NTuple{N, Int}, operators::AbstractArray{<:AbstractMa
     remainingdims[dimsvec] .= false
     sz[remainingdims] == size(operators) || throw(ArgumentError("The number of operators should match the size of the selected dimensions"))
 
-    sz[dimsvec] == tuple(size(first(operators), 2)) || throw(ArgumentError("The size of the operator does not match the selected dimension"))
+    sz[dimsvec[1]] == size(first(operators), 2) || throw(ArgumentError("The size of the operator does not match the selected dimension"))
     outputsz = (sz[1:(dims[1] - 1)]..., size(first(operators), 1), sz[(dims[1] + 1):length(sz)]...)
 
     inputspace = CoordinateSpace(sz)

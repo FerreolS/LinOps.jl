@@ -78,8 +78,7 @@ end
 
 
 @inline _linopgrad_offset_index(::Val{N}, d::Int, off::Int) where {N} = CartesianIndex(ntuple(i -> i == d ? off : 0, Val(N)))
-@inline _linopgrad_ndrange(sz::NTuple{1, Int}, idx::CartesianIndex{1}, ::Val{1}) = sz[1] - idx[1]
-@inline _linopgrad_ndrange(sz::NTuple{N, Int}, idx::CartesianIndex{N}, ::Val{N}) where {N} = ntuple(i -> sz[i] - idx[i], Val(N))
+@inline _linopgrad_ndrange(sz::NTuple{N, Int}, idx::CartesianIndex{N}, ::Val{N}) where {N} = ntuple(i -> sz[i] - Tuple(idx)[i], Val(N))
 
 function _linopgrad_parse_offsets(::Nothing, ::Val{N}) where {N}
     return ntuple(_ -> 1, Val(N))
@@ -87,9 +86,9 @@ end
 
 function _linopgrad_parse_offsets(offsets, ::Val{N}) where {N}
     length(offsets) == N || throw(ArgumentError("LinOpGrad offsets must have length $(N), got $(length(offsets))"))
-    offsets = ntuple(i -> Int(offsets[i]), Val(N))
-    all(>=(0), offsets) || throw(ArgumentError("LinOpGrad offsets offsets must be >= 0"))
-    return offsets
+    parsed_offsets = ntuple(i -> Int(offsets[i]), Val(N))
+    all(>=(0), parsed_offsets) || throw(ArgumentError("LinOpGrad offsets offsets must be >= 0"))
+    return parsed_offsets
 end
 
 function _linopgrad_validate_offsets_for_size(offsets::NTuple{N, Int}, sz::NTuple{N, Int}, ::Val{N}) where {N}
