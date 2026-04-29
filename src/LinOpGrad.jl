@@ -55,7 +55,8 @@ function apply_!(y::AbstractArray{T, M}, (; offsets)::LinOpGrad, x::AbstractArra
         off == 0 && continue
         c += 1
         idx::CartesianIndex{N} = _linopgrad_offset_index(Val(N), d, off)
-        evt = linopgrad_dif_kernel!(backend)(y, x, idx, c; ndrange = _linopgrad_ndrange(size(x), idx, Val(N)))
+        ndrange::NTuple{N, Int} = _linopgrad_ndrange(size(x), idx, Val(N))
+        evt = linopgrad_dif_kernel!(backend)(y, x, idx, c; ndrange = ndrange)
         _linopgrad_wait_or_sync(backend, evt)
     end
     return y
@@ -70,7 +71,8 @@ function apply_adjoint_!(y::AbstractArray{T, N}, A::LinOpGrad, x::AbstractArray{
         off == 0 && continue
         c += 1
         idx::CartesianIndex{N} = _linopgrad_offset_index(Val(N), d, off)
-        evt = linopgrad_dif_adjoint_kernel!(backend)(y, x, idx, c; ndrange = _linopgrad_ndrange(size(y), idx, Val(N)))
+        ndrange::NTuple{N, Int} = _linopgrad_ndrange(size(y), idx, Val(N))
+        evt = linopgrad_dif_adjoint_kernel!(backend)(y, x, idx, c; ndrange = ndrange)
         _linopgrad_wait_or_sync(backend, evt)
     end
     return y
@@ -107,12 +109,12 @@ end
     return nothing
 end
 
-@kernel function linopgrad_dif_kernel!(Y, X, idx::CartesianIndex, d::Int)
+@kernel function linopgrad_dif_kernel!(Y, X, idx::CartesianIndex{N}, d::Int) where {N}
     I = @index(Global, Cartesian)
     @inbounds Y[I, d] = X[I] - X[I + idx]
 end
 
-@kernel function linopgrad_dif_adjoint_kernel!(Y, X, idx::CartesianIndex, d::Int)
+@kernel function linopgrad_dif_adjoint_kernel!(Y, X, idx::CartesianIndex{N}, d::Int) where {N}
     I = @index(Global, Cartesian)
     @inbounds Y[I] += X[I, d]
     @inbounds Y[I + idx] -= X[I, d]

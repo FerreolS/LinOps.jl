@@ -1,3 +1,4 @@
+using Test
 using LinearAlgebra: mul!
 using LinOps: LinOp, LinOpGrad, CoordinateSpace, inputsize, outputsize, inputspace, outputspace
 

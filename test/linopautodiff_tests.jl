@@ -1,7 +1,9 @@
+import LinOps
+using Test
 using Zygote
 using FiniteDifferences
 using LinOps: LinOp, LinOpDiag, LinOpGrad, LinOpDFT, LinOpMapslice,
-    CoordinateSpace, inputsize, outputsize
+    CoordinateSpace, outputsize
 
 struct LinOpDiagX{I, D <: AbstractArray} <: LinOp{I, I}
     inputspace::I
