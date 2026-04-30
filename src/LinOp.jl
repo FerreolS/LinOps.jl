@@ -25,6 +25,8 @@ Base.size(A::LinOp) = (outputsize(A), inputsize(A))
 
 """Infer output element type for applying `A` to `x`."""
 outputtype(A::LinOp, x) = typeof(oneunit(eltype(outputspace(A))) * oneunit(eltype(x)))
+outputtype(A::LinOp) = eltype(outputspace(A))
+
 outputtype(A::UniformScaling, x) = typeof(oneunit(eltype(A)) * oneunit(eltype(x)))
 outputtype(A::AbstractMatrix, x) = typeof(oneunit(eltype(A)) * oneunit(eltype(x)))
 """Infer input element type expected by `A` for an input like `x`."""

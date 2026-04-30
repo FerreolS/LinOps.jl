@@ -1,7 +1,8 @@
 ## Composition
 Base.:*(A::LinOp, B::LinOp) = LinOpCompose(A, B)
-Base.:*(A::LinOp, B::Union{<:UniformScaling, <:Number}) = LinOpCompose(B, A)
-Base.:*(A::Union{<:UniformScaling, <:Number}, B::LinOp) = LinOpCompose(A, B)
+Base.:*(A::LinOp, B::Union{<:UniformScaling, <:Number}) = B * A
+Base.:*(A::Number, B::LinOp) = UniformScaling(A) * B
+Base.:*(A::UniformScaling, B::LinOp) = LinOpCompose(A, B)
 Base.:∘(A::LinOp, B) = LinOpCompose(A, B)
 Base.:∘(A, B::LinOp) = LinOpCompose(A, B)
 Base.:∘(A::LinOp, B::LinOp) = LinOpCompose(A, B)
@@ -30,22 +31,11 @@ function LinOpCompose(A::LinOp{IA, OA}, B::LinOp{IB, OB}) where {IA, OA, IB, OB}
     return LinOpCompose(inspace, outspace, A, B)
 end
 
-
-function LinOpCompose(A::Number, B::LinOp)
-    if A == 0
-        return 0
-    end
-    if A == 1
-        return B
-    end
-    return LinOpCompose(inputspace(B), outputspace(B), UniformScaling(A), B)
-end
-
-LinOpCompose(A::LinOp, B::UniformScaling) = LinOpCompose(B, A)
+LinOpCompose(A::LinOp, B::UniformScaling) = B * A
 
 function LinOpCompose(A::UniformScaling, B::LinOp)
     if A == UniformScaling(0)
-        return A
+        return 0
     end
     if A == UniformScaling(1)
         return B
@@ -69,7 +59,7 @@ end
 function LinOpCompose(A::UniformScaling, B::LinOpCompose{I, O, <:UniformScaling}) where {I, O}
     C = A * B.left
     if C == UniformScaling(0)
-        return C
+        return 0
     end
     if C == UniformScaling(1)
         return B.right
@@ -191,7 +181,12 @@ function apply_adjoint_!(y, A::LinOpSum, x)
     return y
 end
 
-Base.:-(A::LinOp, B::LinOp) = A + (-1 * B)
+function Base.:-(A::LinOp, B::LinOp)
+    if A === B
+        return 0
+    end
+    return A + (-1 * B)
+end
 Base.:-(A::LinOp, B::Union{LinOp, Number, UniformScaling}) = A + (-1 * B)
 Base.:-(A::Union{LinOp, Number, UniformScaling}, B::LinOp) = A + (-1 * B)
 Base.:-(A::LinOp) = -1 * A
