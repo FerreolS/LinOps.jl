@@ -36,6 +36,14 @@ end
     Czero = UniformScaling(0) * (UniformScaling(3) * D)
     @test Czero == UniformScaling(0)
 
+    Cone = UniformScaling(1) * (UniformScaling(3) * D)
+    @test Cone isa LinOp
+    @test Cone * x == [6.0, 18.0, 36.0]
+
+    Cpull = D * (UniformScaling(2) * D)
+    @test Cpull isa LinOp
+    @test Cpull * x == [8.0, 36.0, 96.0]
+
     y = similar(x)
     mul!(y, Cscaled, x)
     @test y == [12.0, 36.0, 72.0]
@@ -65,6 +73,8 @@ end
     @test (A / 2) isa LinOp
     @test (2 \ A) isa LinOp
     @test (A \ 2) isa LinOp
+    @test (A / A) == I
+    @test (A \ A) == I
 
     @test (-A) isa LinOp
     @test (A - B) isa LinOp
@@ -73,4 +83,13 @@ end
 
     @test @inferred(A * x) == [2.0, 6.0, 12.0]
     @test @inferred(S * x) == (A * x) + (B * x)
+end
+
+@testset "Operations - LinOpSum constructor message checks" begin
+    A = LinOpDiag([2.0, 3.0, 4.0])
+    B_bad_in = ScaleOp(CoordinateSpace((2,)), CoordinateSpace((3,)), 1.0)
+    B_bad_out = ScaleOp(CoordinateSpace((3,)), CoordinateSpace((2,)), 1.0)
+
+    @test_throws "input spaces of the two operators should match" A + B_bad_in
+    @test_throws "output spaces of the two operators should match" A + B_bad_out
 end

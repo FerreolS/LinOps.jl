@@ -1,7 +1,8 @@
 using Random
 using LinearAlgebra: dot, mul!
+using Adapt
 using FFTW
-using LinOps: LinOpDFT, LinOpDiag, LinOp, CoordinateSpace, inputspace, outputspace, inputsize, outputsize, isendomorphism
+using LinOps: LinOpDFT, LinOpDiag, LinOp, CoordinateSpace, inputspace, outputspace, inputsize, outputsize, inputtype, outputtype, isendomorphism
 
 @testset "LinOpDFT - Real to complex 1D" begin
     N = 16
@@ -172,4 +173,24 @@ end
     @test sprint(show, Fc) == sc
     @test occursin("LinOpDFT", sr)
     @test sprint(show, Fr) == sr
+end
+
+@testset "LinOpDFT - FFTW extension adapt_structure" begin
+    Fr = LinOpDFT(Float64, (8, 6))
+    Ar = Adapt.adapt(Array{Float32}, Fr)
+    @test Ar isa LinOp
+    @test inputsize(Ar) == inputsize(Fr)
+    @test inputtype(Ar) == Float32
+
+    Fc = LinOpDFT(ComplexF64, (8, 6))
+    Ac = Adapt.adapt(Array{ComplexF32}, Fc)
+    @test Ac isa LinOp
+    @test inputsize(Ac) == inputsize(Fc)
+    @test outputsize(Ac) == outputsize(Fc)
+    @test outputtype(Ac, rand(ComplexF32, inputsize(Ac)...)) == ComplexF32
+end
+
+@testset "LinOpDFT - FFTW extension flag validation" begin
+    badflags = typemax(Int)
+    @test_throws "only FFTW planning flags can be specified" LinOpDFT(Float64, (8,); flags = badflags)
 end

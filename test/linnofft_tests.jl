@@ -1,5 +1,6 @@
 using Random
 using LinearAlgebra: dot, mul!
+using Adapt
 using NonuniformFFTs
 using LinOps: LinOpNFFT, LinOp, CoordinateSpace, inputspace, outputspace, inputsize, outputsize, isendomorphism, outputtype
 
@@ -142,4 +143,24 @@ end
     s = summary(NF)
     @test occursin("LinOpNFFT", s)
     @test sprint(show, NF) == s
+
+    plain = sprint(show, MIME("text/plain"), NF)
+    @test occursin("Linear Operator:", plain)
+    @test occursin("LinOpNFFT", plain)
+end
+
+@testset "LinOpNFFT - NonuniformFFTs extension adapt_structure" begin
+    Random.seed!(10)
+    N = 32; npts = 20
+    xpts = Float32.(pi .* (2 .* rand(npts) .- 1))
+    NF = LinOpNFFT(Float32, (N,), (xpts,))
+
+    NF_adapt = Adapt.adapt(Array{Float64}, NF)
+    @test NF_adapt isa LinOp
+    @test inputsize(NF_adapt) == inputsize(NF)
+    @test outputsize(NF_adapt) == outputsize(NF)
+
+    x = randn(Float64, npts)
+    y = NF_adapt * x
+    @test size(y) == outputsize(NF_adapt)
 end
