@@ -110,3 +110,32 @@ end
     @test inputspace(AD) == outputspace(D)
     @test outputspace(AD) == inputspace(D)
 end
+
+@testset "LinOp - matrix and scaling helper dispatch" begin
+    M = [1.0 2.0; 3.0 4.0]
+    x = [1.0, -1.0]
+
+    @test inputspace(M) == CoordinateSpace((2,))
+    @test outputspace(M) == CoordinateSpace((2,))
+
+    @test @inferred(LinOps.outputtype(M, x)) == Float64
+    @test @inferred(LinOps.inputtype(M, x)) == Float64
+    @test @inferred(LinOps.outputtype(UniformScaling(2.0), x)) == Float64
+    @test @inferred(LinOps.inputtype(UniformScaling(2.0), x)) == Float64
+end
+
+@testset "LinOp - error messages and adjoint forwarding methods" begin
+    A = ApplyOnlyOp(3)
+    x_bad = ones(2)
+    x = ones(3)
+    y_bad = zeros(2)
+
+    @test_throws "must belong to the space" A * x_bad
+    @test_throws "must belong to the space" mul!(y_bad, A, x)
+
+    D = LinOpDiag([1.0, 2.0, 3.0])
+    y = similar(x)
+    @test @inferred(LinOps.apply_adjoint_(D', x)) == D * x
+    mul!(y, D, x)
+    @test @inferred(LinOps.apply_adjoint_!(y, D', x)) == D * x
+end

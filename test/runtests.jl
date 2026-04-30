@@ -8,6 +8,7 @@ using Test
 @testset "LinOps" begin
     include("domain_tests.jl")
     include("linop_tests.jl")
+    include("operations_tests.jl")
     include("linopmapslice_tests.jl")
     include("linopdiag_tests.jl")
     include("linopgrad_tests.jl")

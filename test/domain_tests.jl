@@ -1,3 +1,5 @@
+using Adapt: adapt
+
 @testset "Domains - CoordinateSpace Construction" begin
     # Single dimension
     sp1 = CoordinateSpace(10)
@@ -227,4 +229,42 @@ end
 
     cs2 = CoordinateSpace((4, 5))
     @test LinOps.promote_domain(typeof(cs), typeof(cs2)) == CoordinateSpace{2}
+end
+
+@testset "Domains - TypedCoordinateSpace constructors and adaptation" begin
+    ts1 = @inferred LinOps.TypedCoordinateSpace(Float32, 7)
+    @test size(ts1) == (7,)
+    @test eltype(ts1) == Float32
+
+    ts0 = @inferred LinOps.TypedCoordinateSpace(Float32)
+    @test size(ts0) == ()
+    @test ndims(ts0) == 0
+
+    ts_copy = @inferred LinOps.TypedCoordinateSpace(ts1)
+    @test ts_copy === ts1
+
+    z = @inferred zeros(ts1)
+    o = @inferred ones(ts1)
+    r = @inferred rand(ts1)
+    rn = @inferred randn(ts1)
+    @test size(z) == (7,)
+    @test size(o) == (7,)
+    @test size(r) == (7,)
+    @test size(rn) == (7,)
+    @test eltype(z) == Float32
+    @test eltype(o) == Float32
+    @test eltype(r) == Float32
+    @test eltype(rn) == Float32
+
+    A = randn(Float64, 2, 2)
+    sim = @inferred similar(A, ts1)
+    @test size(sim) == (7,)
+    @test eltype(sim) == Float32
+
+    ts_complex = LinOps.TypedCoordinateSpace(ComplexF64, (3,))
+    ts_real_target = @inferred adapt(Array{Float32}, ts_complex)
+    @test eltype(ts_real_target) == ComplexF32
+    @test size(ts_real_target) == (3,)
+
+    @test @inferred(LinOps.promote_domain(typeof(ts_complex), typeof(ts1))) == LinOps.TypedCoordinateSpace{ComplexF64, 1}
 end

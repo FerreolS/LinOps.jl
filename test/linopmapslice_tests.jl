@@ -163,3 +163,26 @@ end
     @test_throws "At least one dimension must be selected" LinOpMapslice(sz, scalars; dims = Int[])
     @test_throws "Selected dimensions must be unique" LinOpMapslice(sz, scalars; dims = (1, 1))
 end
+
+@testset "LinOpMapslice - SVector dims and typed operators" begin
+    sz = (2, 5, 3)
+    D = LinOpDiag(randn(Float32, 5))
+    dims_svec = LinOps.SVector(2)
+
+    M_svec = LinOpMapslice(sz, D; dims = dims_svec)
+    @test M_svec isa LinOpMapslice
+    x = randn(Float32, sz...)
+    y = @inferred(M_svec * x)
+    @test size(y) == sz
+
+    ops_typed = [LinOpDiag(randn(Float32, 5)) for _ in 1:sz[1], _ in 1:sz[3]]
+    M_ops = LinOpMapslice(sz, ops_typed; dims = (2,))
+    @test M_ops isa LinOpMapslice
+    y_ops = @inferred(M_ops * x)
+    @test size(y_ops) == sz
+end
+
+@testset "LinOpMapslice - matrix dims message" begin
+    mats = [randn(3, 5) for _ in 1:2, _ in 1:3]
+    @test_throws "Only one dimension can be selected for matrix operators" LinOpMapslice((2, 5, 3), mats; dims = (1, 2))
+end
