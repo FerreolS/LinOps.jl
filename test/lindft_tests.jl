@@ -150,6 +150,19 @@ end
     @test C2 * x ≈ bfft(fft(x))
 end
 
+@testset "LinOpDFT - Adjoint and inverse" begin
+    N = 16
+    F = LinOpDFT(ComplexF64, (N,))
+    @test inv(F) * 4 * F isa UniformScaling
+    @test inv(F) * 4 * F == UniformScaling(4)
+    @test @inferred inv(F).left == UniformScaling(1 / N)
+    x = randn(ComplexF64, N)
+
+    y = F * x
+    @test @inferred inv(F) * y ≈ x
+
+end
+
 @testset "LinOpDFT - Adjoint of generic composition" begin
     N = 16
     F = LinOpDFT(ComplexF64, (N,))
