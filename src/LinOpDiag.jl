@@ -41,18 +41,20 @@ apply_adjoint_!(y, A::LinOpDiag, x) = @. y = conj.(A.diag) * x
 end
  =#
 
-function LinOpCompose(A::D, B::LinOpAdjoint{O, I, D}) where {I, O, D <: LinOpDiag{I, O}}
-    if parent(B) === A
+function LinOpCompose(A::D, B::LinOpAdjoint{O, I, D}) where {I, O, D <: LinOpDiag}
+    pB = parent(B)
+    if pB === A
         return LinOpDiag(abs2.(A.diag))
     end
-    return LinOpDiag(@. A.diag * conj(parent(B).diag))
+    return LinOpDiag(A.diag .* conj.(pB.diag))
 end
 
-function LinOpCompose(A::LinOpAdjoint{I, O, D}, B::D) where {I, O, D <: LinOpDiag{O, I}}
-    if parent(A) === B
+function LinOpCompose(A::LinOpAdjoint{I, O, D}, B::D) where {I, O, D <: LinOpDiag}
+    pA = parent(A)
+    if pA === B
         return LinOpDiag(abs2.(B.diag))
     end
-    return LinOpDiag(@. B.diag * conj(parent(A).diag))
+    return LinOpDiag(B.diag .* conj.(pA.diag))
 end
 
 function LinOpCompose(A::LinOpDiag, B::LinOpDiag)

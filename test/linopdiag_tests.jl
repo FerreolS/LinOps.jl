@@ -186,12 +186,36 @@ end
     A = LinOpDiag(d)
     x = ComplexF64[1 - im, 2 + im, -3 + 2im]
 
+    # Same-operator identity: A * A' and A' * A → abs2 diagonal
     P1 = A * A'
+    @test P1 isa LinOpDiag
     @test P1 * x ≈ abs2.(d) .* x
 
     P2 = A' * A
+    @test P2 isa LinOpDiag
     @test P2 * x ≈ abs2.(d) .* x
+
+    # Different-operator branches: A * B' and A' * B (parent !== other operator)
+    d2 = ComplexF64[2 - im, 1 + 3im, 0 + im]
+    B = LinOpDiag(d2)
+
+    AB_adj = A * B'
+    @test AB_adj isa LinOpDiag
+    @test AB_adj * x ≈ (d .* conj.(d2)) .* x
+
+    Aadj_B = A' * B
+    @test Aadj_B isa LinOpDiag
+    @test Aadj_B * x ≈ (d2 .* conj.(d)) .* x
 
     @test (@inferred(inv(A))) isa LinOpDiag
     @test (@inferred(A^2)) isa LinOpDiag
+end
+
+@testset "LinOpDiag - UniformScaling identity composition" begin
+    d = [2.0, 3.0, 4.0]
+    A = LinOpDiag(d)
+
+    # UniformScaling(1) * A → returns A itself
+    R = UniformScaling(1) * A
+    @test R === A
 end
