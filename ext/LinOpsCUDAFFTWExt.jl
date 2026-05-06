@@ -10,7 +10,7 @@ using CUDA
 import Adapt
 import Adapt.adapt_structure
 using LinOps #: LinOpDFT, inputsize, outputsize, outputtype, inputtype,AbstractDomain
-using LinOps: TypedCoordinateSpace, AbstractDomain
+using LinOps: TypedCoordinateSpace, AbstractDomain, inputtype
 
 
 """
@@ -22,7 +22,6 @@ function Adapt.adapt_structure(::Type{CUDA.CuArray}, x::LinOpDFT)
     return Adapt.adapt_structure(CUDA.CuArray{inputtype(x)}, x)
 end
 
-Adapt.adapt_structure(::CUDA.KernelAdaptor, x::LinOps.AbstractDomain) = adapt(CuArray{Float32}, x)
 
 """
     Adapt.adapt_structure(::Type{CUDA.CuArray{T}}, x::LinOpDFT)
