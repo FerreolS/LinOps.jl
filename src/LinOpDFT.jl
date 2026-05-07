@@ -102,15 +102,17 @@ struct LinOpNFFT{
         O,
         F,
         D,
-        P
+        S,
+        P,
     } <: LinOp{I, O}
 
     inputspace::I
     outputspace::O
     plan::F             # plan for forward transform
     dims::D
+    size::S
     points::P
-    LinOpNFFT(inputspace::I, outputspace::O, plan::F, dims::D, points::P) where {I <: AbstractDomain, O <: AbstractDomain, F, D <: NTuple,P} = new{I, O, F, D,P}(inputspace, outputspace, plan, dims, points)
+    LinOpNFFT(inputspace::I, outputspace::O, plan::F, dims::D, size::S, points::P) where {I <: AbstractDomain, O <: AbstractDomain, F, D, S <: NTuple, P} = new{I, O, F, D, S, P}(inputspace, outputspace, plan, dims, size, points)
 end
 
 has_operator(::Type{<:LinOpNFFT}) = has_operator(:nfft)
