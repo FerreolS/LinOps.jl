@@ -26,16 +26,11 @@ end
 outputtype(A::LinOpMapslice{I, O, <:LinOp}, x) where {I, O} = outputtype(A.operator, x)
 outputtype(A::LinOpAdjoint{O, I, <:LinOpMapslice{I, O, <:LinOp}}, x) where {I, O} = outputtype(adjoint(parent(A).operator), x)
 
-LinOpMapslice(sz::NTuple, operator; dims) = LinOpMapslice(sz, operator, _mapslice_dims_tuple(dims))
+LinOpMapslice(sz::NTuple, operator; dims) = LinOpMapslice(sz, operator, _dims2tuple(dims))
 
 LinOpMapslice(sz::NTuple, operator, dims::Integer) = LinOpMapslice(sz, operator; dims)
 LinOpMapslice(sz::NTuple, operator, dims::NTuple{N, <:Integer}) where {N} = LinOpMapslice(sz, operator; dims)
 LinOpMapslice(sz::NTuple, operator, dims::AbstractVector{<:Integer}) = LinOpMapslice(sz, operator; dims)
-
-_mapslice_dims_tuple(dims::Integer) = (Int(dims),)
-_mapslice_dims_tuple(dims::NTuple{N, <:Integer}) where {N} = ntuple(i -> Int(dims[i]), Val(N))
-_mapslice_dims_tuple(dims::SVector{N, <:Integer}) where {N} = ntuple(i -> Int(dims[i]), Val(N))
-_mapslice_dims_tuple(dims::AbstractVector{<:Integer}) = Tuple(Int.(dims))
 
 function _validate_mapslice_dims(sz::NTuple, dims::NTuple{N, Int}) where {N}
     N > 0 || throw(ArgumentError("At least one dimension must be selected"))
