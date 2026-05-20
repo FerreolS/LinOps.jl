@@ -11,7 +11,7 @@ import FFTW
 import FFTW: fftwComplex, fftwReal, fftwNumber, plan_brfft, plan_rfft, plan_fft, plan_bfft
 import LinOps
 import LinOps: TypedCoordinateSpace, LinOpDFT, apply_!, apply_adjoint_!, inputsize, outputsize,
-    outputtype, LinOpAdjoint
+    outputtype, LinOpAdjoint, inputtype
 
 LinOps.has_operator(::Val{:dft}) = true
 LinOps.operator_backend(::Val{:dft}) = :fftw
@@ -114,12 +114,12 @@ apply_adjoint_!(y, A::LinOpDFT, x) = FFTW.mul!(y, A.backward, complex(x))
 function Base.summary(A::LinOpDFT{I, O, <:FFTW.FFTWPlan{T}}) where {I, O, T}
     return "LinOpDFT ($T) $(inputsize(A)) -> $(outputsize(A))"
 end
-#=
+
 
 function Adapt.adapt_structure(::Type{A}, x::LinOpDFT) where {A <: AbstractArray}
-    return Adapt.adapt_structure(A{eltype(inputspace(x))}, x)
+    return Adapt.adapt_structure(A{inputtype(x)}, x)
 end
- =#
+ 
 
 function Adapt.adapt_structure(::Type{A}, x::LinOpDFT) where {T <: fftwNumber, A <: AbstractArray{T}}
     sz = inputsize(x)
