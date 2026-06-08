@@ -30,10 +30,10 @@ function Base.summary(A::LinOpDiag)
 end
 
 apply_(A::LinOpDiag, x) = A.diag .* x
-apply_adjoint_(A::LinOpDiag, x) = conj.(A.diag) .* x
+apply_adjoint_(A::LinOpDiag, x) = @. conj(A.diag) * x
 
 apply_!(y, A::LinOpDiag, x) = @. y = A.diag * x
-apply_adjoint_!(y, A::LinOpDiag, x) = @. y = conj.(A.diag) * x
+apply_adjoint_!(y, A::LinOpDiag, x) = @. y = conj(A.diag) * x
 
 # This make A'' == A and not === .Not sure if this is better than the default where A'' === A
 #= function LinOpAdjoint(A::LinOpDiag)

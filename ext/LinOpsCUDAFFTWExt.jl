@@ -29,24 +29,25 @@ end
 Adapt a `LinOpDFT` to CUDA with element type `T`, rebuilding compatible FFT plans.
 """
 function Adapt.adapt_structure(::Type{CUDA.CuArray{T}}, x::LinOpDFT) where {T}
-    dims = inputsize(x)
+    input_sz = inputsize(x)
 
     if T <: Union{Float32, Float64}
-        forward = plan_rfft(CUDA.CuArray{T}(undef, dims))
+        forward = plan_rfft(CUDA.CuArray{T}(undef, input_sz),
+                             x.dims)
 
-        backward = plan_brfft(CUDA.CuArray{Complex{T}}(undef, forward.output_size), dims[1])
+        backward = plan_brfft(CUDA.CuArray{Complex{T}}(undef, forward.output_size), input_sz[1])
         outputspace = TypedCoordinateSpace(Complex{T}, forward.output_size)
     else
-        temp = CUDA.CuArray{T}(undef, dims)
-        forward = plan_fft(temp)
-        backward = plan_bfft(temp)
+        temp = CUDA.CuArray{T}(undef, input_sz)
+        forward = plan_fft(temp, x.dims)
+        backward = plan_bfft(temp,  x.dims)
         outputspace = TypedCoordinateSpace(T, forward.output_size)
     end
 
 
     # Build operator.
     inputspace = TypedCoordinateSpace(T, forward.input_size)
-    return LinOpDFT(inputspace, outputspace, forward, backward)
+    return LinOpDFT(inputspace, outputspace, x.dims, forward, backward)
 
 end
 

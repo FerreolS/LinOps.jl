@@ -61,7 +61,7 @@ function LinOpDFT(
 
     inputspace = TypedCoordinateSpace(T, forward.sz)
     outputspace = TypedCoordinateSpace(Complex{T}, forward.osz)
-    return LinOpDFT(inputspace, outputspace, forward, backward)
+    return LinOpDFT(inputspace, outputspace,dims, forward, backward)
 end
 
 
@@ -103,7 +103,7 @@ function LinOpDFT(
 
     inputspace = TypedCoordinateSpace(T, forward.sz)
     outputspace = TypedCoordinateSpace(T, forward.osz)
-    return LinOpDFT(inputspace, outputspace, forward, backward)
+    return LinOpDFT(inputspace, outputspace,dims,  forward, backward)
 end
 
 LinOpDFT(sz::NTuple; kwargs...) = LinOpDFT(ComplexF64, sz; kwargs...)
@@ -131,24 +131,30 @@ function Adapt.adapt_structure(::Type{A}, x::LinOpDFT) where {T <: fftwNumber, A
 
     if T <: fftwReal
         forward = plan_rfft(
-            Array{T}(undef, sz);
+            Array{T}(undef, sz),
+            x.dims;
             flags = (planning | FFTW.PRESERVE_INPUT),
             timelimit = timelimit
         )
 
         backward = plan_brfft(
-            Array{Complex{T}}(undef, forward.osz), sz[1];
+            Array{Complex{T}}(undef, forward.osz), sz[1],
+            x.dims;
             flags = (planning | FFTW.DESTROY_INPUT),
             timelimit = timelimit
         )
     else
         temp = Array{T}(undef, sz)
         forward = plan_fft(
-            temp; flags = (planning | FFTW.DESTROY_INPUT),
+            temp,
+            x.dims;
+            flags = (planning | FFTW.DESTROY_INPUT),
             timelimit = timelimit
         )
         backward = plan_bfft(
-            temp; flags = (planning | FFTW.DESTROY_INPUT),
+            temp,
+            x.dims; 
+            flags = (planning | FFTW.DESTROY_INPUT),
             timelimit = timelimit
         )
     end
@@ -157,7 +163,7 @@ function Adapt.adapt_structure(::Type{A}, x::LinOpDFT) where {T <: fftwNumber, A
     # Build operator.
     inputspace = TypedCoordinateSpace(T, forward.sz)
     outputspace = TypedCoordinateSpace(T, forward.osz)
-    return LinOpDFT(inputspace, outputspace, forward, backward)
+    return LinOpDFT(inputspace, outputspace,x.dims, forward, backward)
 
 end
 
