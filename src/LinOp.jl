@@ -131,12 +131,12 @@ function Base.show(io::IO, ::MIME"text/plain", A::LinOp)
 end
 
 function assert_applicable(A::LinOp, x)
-    return x ∈ inputspace(A) || throw(ArgumentError("The input size (size $(size(x)) ) must belong to the space $(inputspace(A))"))
+    return x ∈ inputspace(A) || throw(ArgumentError("The input  ($(summary(x)) ) must belong to the space $(inputspace(A))"))
 end
 
 function assert_applicable(A::LinOp, x, y)
-    x ∈ inputspace(A) || throw(ArgumentError("The input size (size $(size(x)) ) must belong to the space $(inputspace(A))"))
-    return y ∈ outputspace(A) || throw(ArgumentError("The output size (size $(size(y)) ) must belong to the space $(outputspace(A))"))
+    x ∈ inputspace(A) || throw(ArgumentError("The input  ($(summary(x))) must belong to the space $(inputspace(A))"))
+    return y ∈ outputspace(A) || throw(ArgumentError("The output  ($(summary(y)) ) must belong to the space $(outputspace(A))"))
 end
 
 ## Applying linear operators
