@@ -71,7 +71,7 @@ function apply_adjoint_!(y::AbstractArray{T, N}, A::LinOpGrad, x::AbstractArray{
         off == 0 && continue
         c += 1
         idx::CartesianIndex{N} = _linopgrad_offset_index(Val(N), d, off)
-        ndrange::NTuple{N, Int} = _linopgrad_ndrange(size(y), idx, Val(N))
+        ndrange::NTuple{N, Int} = size(y)
         evt = linopgrad_dif_adjoint_kernel!(backend)(y, x, idx, c; ndrange = ndrange)
         _linopgrad_wait_or_sync(backend, evt)
     end
@@ -116,6 +116,16 @@ end
 
 @kernel function linopgrad_dif_adjoint_kernel!(Y, X, idx::CartesianIndex{N}, d::Int) where {N}
     I = @index(Global, Cartesian)
-    @inbounds Y[I] += X[I, d]
-    @inbounds Y[I + idx] -= X[I, d]
+    value = zero(eltype(Y))
+    _linopgrad_has_forward_neighbor(I, idx, size(Y), Val(N)) && (@inbounds value += X[I, d])
+    _linopgrad_has_backward_neighbor(I, idx, Val(N)) && (@inbounds value -= X[I - idx, d])
+    @inbounds Y[I] += value
+end
+
+@inline function _linopgrad_has_forward_neighbor(I::CartesianIndex{N}, idx::CartesianIndex{N}, sz::NTuple{N, Int}, ::Val{N}) where {N}
+    return all(ntuple(i -> Tuple(I)[i] + Tuple(idx)[i] <= sz[i], Val(N)))
+end
+
+@inline function _linopgrad_has_backward_neighbor(I::CartesianIndex{N}, idx::CartesianIndex{N}, ::Val{N}) where {N}
+    return all(ntuple(i -> Tuple(I)[i] - Tuple(idx)[i] >= 1, Val(N)))
 end

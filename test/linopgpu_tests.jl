@@ -1,7 +1,7 @@
 using GPUArrays
 using JLArrays
 using LinearAlgebra: mul!
-using LinOps: LinOp, LinOpDiag, LinOpMapslice, inputsize, outputsize, CoordinateSpace, inputspace, outputspace
+using LinOps: LinOp, LinOpDiag, LinOpGrad, LinOpMapslice, inputsize, outputsize, CoordinateSpace, inputspace, outputspace
 
 @testset "LinOpDiag - GPU arrays" begin
     @testset "LinOpDiag forward pass on GPU" begin
@@ -138,6 +138,25 @@ using LinOps: LinOp, LinOpDiag, LinOpMapslice, inputsize, outputsize, Coordinate
         y_gpu = A_gpu * x_gpu
 
         @test Array(y_gpu) ≈ y_cpu rtol = 1.0e-12
+    end
+end
+
+@testset "LinOpGrad - GPU arrays" begin
+    @testset "LinOpGrad adjoint on GPU matches CPU and is repeatable" begin
+        y_cpu = randn(Float32, 6, 5, 2)
+        x_cpu = randn(Float32, 6, 5)
+        A = LinOpGrad((6, 5))
+        ref = A' * y_cpu
+
+        y_gpu = JLArray(y_cpu)
+        x_gpu = JLArray(x_cpu)
+        out1 = Array(A' * y_gpu)
+        out2 = Array(A' * y_gpu)
+
+        @test dot(A' * y_gpu, x_gpu) ≈ dot( y_gpu, A * x_gpu)
+        @test out1 ≈ ref
+        @test out2 ≈ ref
+        @test out1 ≈ out2
     end
 end
 
