@@ -18,7 +18,8 @@ using AbstractFFTs,
     ChainRulesCore,
     KernelAbstractions,
     LinearAlgebra,
-    StaticArrays
+    StaticArrays,
+    TypeUtils
 
 import LinearAlgebra:
     mul!,

@@ -268,3 +268,64 @@ end
 
     @test @inferred(LinOps.promote_domain(typeof(ts_complex), typeof(ts1))) == LinOps.TypedCoordinateSpace{ComplexF64, 1}
 end
+
+@testset "Domains - StoredCoordinateSpace" begin
+    sp = @inferred LinOps.StoredCoordinateSpace(Float32, (2, 3), Array{Float32, 2})
+    @test typeof(sp) == LinOps.StoredCoordinateSpace{Float32, 2, Matrix{Float32}}
+    @test size(sp) == (2, 3)
+    @test ndims(sp) == 2
+    @test eltype(sp) == Float32
+    @test LinOps.get_storage(sp) == Array{Float32, 2}
+
+    sp_from_int = @inferred LinOps.StoredCoordinateSpace(Float32, 7, Array{Float32, 1})
+    @test size(sp_from_int) == (7,)
+    @test ndims(sp_from_int) == 1
+    @test LinOps.get_storage(sp_from_int) == Array{Float32, 1}
+
+    sp_copy = @inferred LinOps.StoredCoordinateSpace(sp)
+    @test sp_copy === sp
+
+    @test zeros(Float32, 2, 3) in sp
+    @test !(zeros(Float64, 2, 3) in sp)
+    @test !(zeros(Float32, 3, 2) in sp)
+
+    z = @inferred zeros(sp)
+    o = @inferred ones(sp)
+    sim = @inferred similar(sp)
+    @test size(z) == (2, 3)
+    @test size(o) == (2, 3)
+    @test size(sim) == (2, 3)
+    @test eltype(z) == Float32
+    @test eltype(o) == Float32
+    @test eltype(sim) == Float32
+
+    A = randn(Float64, 4, 4)
+    simA = @inferred similar(A, sp)
+    @test size(simA) == (2, 3)
+    @test eltype(simA) == Float32
+
+    sp_adapted = @inferred adapt(Array{Float32, 2}, sp)
+    @test typeof(sp_adapted) == LinOps.StoredCoordinateSpace{Float32, 2, Matrix{Float32}}
+    @test size(sp_adapted) == (2, 3)
+    @test eltype(sp_adapted) == Float32
+    @test LinOps.get_storage(sp_adapted) == Array{Float32, 2}
+
+    # T === Any branch should preserve source element type Tx.
+    sp_adapted_any = @inferred adapt(Array{Any, 2}, sp)
+    @test eltype(sp_adapted_any) == Float32
+    @test LinOps.get_storage(sp_adapted_any) == Array{Float32, 2}
+
+    # Complex -> real target should preserve complex structure with promoted real type.
+    sp_complex = LinOps.StoredCoordinateSpace(ComplexF64, (2, 3), Array{ComplexF64, 2})
+    sp_complex_adapt = @inferred adapt(Array{Float32, 2}, sp_complex)
+    @test eltype(sp_complex_adapt) == ComplexF32
+    @test LinOps.get_storage(sp_complex_adapt) == Array{ComplexF32, 2}
+
+    ts = @inferred LinOps.TypedCoordinateSpace(Float64, (2, 3))
+    cs = @inferred LinOps.CoordinateSpace((2, 3))
+    @test LinOps.promote_domain(typeof(sp), typeof(sp_adapted)) == LinOps.StoredCoordinateSpace{Float32, 2}
+    @test LinOps.promote_domain(typeof(ts), typeof(sp)) == LinOps.StoredCoordinateSpace{Float64, 2}
+    @test LinOps.promote_domain(typeof(sp), typeof(ts)) == LinOps.StoredCoordinateSpace{Float64, 2}
+    @test LinOps.promote_domain(typeof(cs), typeof(sp)) == LinOps.StoredCoordinateSpace{Float32, 2}
+    @test LinOps.promote_domain(typeof(sp), typeof(cs)) == LinOps.StoredCoordinateSpace{Float32, 2}
+end
