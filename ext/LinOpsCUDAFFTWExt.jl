@@ -32,15 +32,17 @@ function Adapt.adapt_structure(::Type{CUDA.CuArray{T}}, x::LinOpDFT) where {T}
     input_sz = inputsize(x)
 
     if T <: Union{Float32, Float64}
-        forward = plan_rfft(CUDA.CuArray{T}(undef, input_sz),
-                             x.dims)
+        forward = plan_rfft(
+            CUDA.CuArray{T}(undef, input_sz),
+            x.dims
+        )
 
         backward = plan_brfft(CUDA.CuArray{Complex{T}}(undef, forward.output_size), input_sz[1], x.dims)
         outputspace = TypedCoordinateSpace(Complex{T}, forward.output_size)
     else
         temp = CUDA.CuArray{T}(undef, input_sz)
         forward = plan_fft(temp, x.dims)
-        backward = plan_bfft(temp,  x.dims)
+        backward = plan_bfft(temp, x.dims)
         outputspace = TypedCoordinateSpace(T, forward.output_size)
     end
 

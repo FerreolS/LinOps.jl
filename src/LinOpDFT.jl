@@ -10,16 +10,16 @@ This operator is optional and provided by the FFTW extension. Call
 current session.
 """
 struct LinOpDFT{
-        I, O,D,
+        I, O, D,
         F <: Plan,     # type of forward plan
         B <: Plan,      # type of backward plan
     } <: LinOp{I, O}
     inputspace::I
-    outputspace::O    
+    outputspace::O
     dims::D
     forward::F             # plan for forward transform
     backward::B            # plan for backward transform
-    LinOpDFT(inputspace::I, outputspace::O, dims::D,forward::F, backward::B) where {I, O, F, B,D} = new{I, O, D, F, B}(inputspace, outputspace, dims, forward, backward)
+    LinOpDFT(inputspace::I, outputspace::O, dims::D, forward::F, backward::B) where {I, O, F, B, D} = new{I, O, D, F, B}(inputspace, outputspace, dims, forward, backward)
     # unitary::Bool ?
 end
 

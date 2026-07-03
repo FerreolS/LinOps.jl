@@ -4,7 +4,7 @@ _dims2tuple(dims::SVector{N, <:Integer}) where {N} = ntuple(i -> Int(dims[i]), V
 _dims2tuple(dims::AbstractVector{<:Integer}) = Tuple(Int.(dims))
 
 function verify_adjoint(A::LinOp)
-	x = randn(inputspace(A))
-	y = randn(outputspace(A))
-	dot(y, A*x)  ≈ dot(A'y, x) 
+    x = randn(inputspace(A))
+    y = randn(outputspace(A))
+    return dot(y, A * x) ≈ dot(A'y, x)
 end

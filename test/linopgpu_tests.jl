@@ -153,7 +153,7 @@ end
         out1 = Array(A' * y_gpu)
         out2 = Array(A' * y_gpu)
 
-        @test dot(A' * y_gpu, x_gpu) ≈ dot( y_gpu, A * x_gpu)
+        @test dot(A' * y_gpu, x_gpu) ≈ dot(y_gpu, A * x_gpu)
         @test out1 ≈ ref
         @test out2 ≈ ref
         @test out1 ≈ out2

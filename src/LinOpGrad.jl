@@ -25,9 +25,6 @@ struct LinOpGrad{I, O, D} <: LinOp{I, O}
         _linopgrad_validate_offsets_for_size(offsets, size(inputspace), Val(N))
         return new{I, typeof(outputspace), typeof(offsets)}(inputspace, outputspace, offsets)
     end
-    function LinOpGrad(inputspace::I, outputspace::O, offsets::D) where {I <: AbstractDomain, O <: AbstractDomain, D}
-        return new{I, O, D}(inputspace, outputspace, offsets)
-    end
 end
 
 LinOpGrad(sz::NTuple{N, Int}; offsets = nothing) where {N} = LinOpGrad(CoordinateSpace(sz); offsets = offsets)

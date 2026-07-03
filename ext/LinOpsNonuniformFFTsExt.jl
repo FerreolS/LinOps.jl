@@ -121,7 +121,7 @@ function Adapt.adapt_structure(to, x::LinOpNFFT)
         tmp = to(undef, 0)
     end
     backend = get_backend(tmp)
-    points = adapt(to,x.points)
+    points = adapt(to, x.points)
     return LinOpNFFT(T, x.size, points; dims = x.dims, backend = backend)  # construct new operator with adapted type and same points
 end
 

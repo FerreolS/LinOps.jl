@@ -61,7 +61,7 @@ function LinOpDFT(
 
     inputspace = TypedCoordinateSpace(T, forward.sz)
     outputspace = TypedCoordinateSpace(Complex{T}, forward.osz)
-    return LinOpDFT(inputspace, outputspace,dims, forward, backward)
+    return LinOpDFT(inputspace, outputspace, dims, forward, backward)
 end
 
 
@@ -103,7 +103,7 @@ function LinOpDFT(
 
     inputspace = TypedCoordinateSpace(T, forward.sz)
     outputspace = TypedCoordinateSpace(T, forward.osz)
-    return LinOpDFT(inputspace, outputspace,dims,  forward, backward)
+    return LinOpDFT(inputspace, outputspace, dims, forward, backward)
 end
 
 LinOpDFT(sz::NTuple; kwargs...) = LinOpDFT(ComplexF64, sz; kwargs...)
@@ -119,7 +119,7 @@ end
 function Adapt.adapt_structure(::Type{A}, x::LinOpDFT) where {A <: AbstractArray}
     return Adapt.adapt_structure(A{inputtype(x)}, x)
 end
- 
+
 
 function Adapt.adapt_structure(::Type{A}, x::LinOpDFT) where {T <: fftwNumber, A <: AbstractArray{T}}
     sz = inputsize(x)
@@ -153,7 +153,7 @@ function Adapt.adapt_structure(::Type{A}, x::LinOpDFT) where {T <: fftwNumber, A
         )
         backward = plan_bfft(
             temp,
-            x.dims; 
+            x.dims;
             flags = (planning | FFTW.DESTROY_INPUT),
             timelimit = timelimit
         )
@@ -163,7 +163,7 @@ function Adapt.adapt_structure(::Type{A}, x::LinOpDFT) where {T <: fftwNumber, A
     # Build operator.
     inputspace = TypedCoordinateSpace(T, forward.sz)
     outputspace = TypedCoordinateSpace(T, forward.osz)
-    return LinOpDFT(inputspace, outputspace,x.dims, forward, backward)
+    return LinOpDFT(inputspace, outputspace, x.dims, forward, backward)
 
 end
 
