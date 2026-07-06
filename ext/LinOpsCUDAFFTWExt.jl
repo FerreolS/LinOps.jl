@@ -10,7 +10,7 @@ using CUDA
 import Adapt
 import Adapt.adapt_structure
 using LinOps #: LinOpDFT, inputsize, outputsize, outputtype, inputtype,AbstractDomain
-using LinOps: TypedCoordinateSpace, AbstractDomain, inputtype
+using LinOps: CoordinateSpace, AbstractDomain, inputtype
 
 
 """
@@ -38,17 +38,17 @@ function Adapt.adapt_structure(::Type{CUDA.CuArray{T}}, x::LinOpDFT) where {T}
         )
 
         backward = plan_brfft(CUDA.CuArray{Complex{T}}(undef, forward.output_size), input_sz[1], x.dims)
-        outputspace = TypedCoordinateSpace(Complex{T}, forward.output_size)
+        outputspace = CoordinateSpace(Complex{T}, forward.output_size, CuArray)
     else
         temp = CUDA.CuArray{T}(undef, input_sz)
         forward = plan_fft(temp, x.dims)
         backward = plan_bfft(temp, x.dims)
-        outputspace = TypedCoordinateSpace(T, forward.output_size)
+        outputspace = CoordinateSpace(T, forward.output_size, CuArray)
     end
 
 
     # Build operator.
-    inputspace = TypedCoordinateSpace(T, forward.input_size)
+    inputspace = CoordinateSpace(T, forward.input_size, CuArray)
     return LinOpDFT(inputspace, outputspace, x.dims, forward, backward)
 
 end

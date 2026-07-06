@@ -21,6 +21,11 @@ using Adapt: adapt
     sp_copy = CoordinateSpace(sp2)
     @test sp_copy === sp2
     @test size(sp_copy) == size(sp2)
+
+    sp_typed = CoordinateSpace(Int, (2, 3))
+    @test size(sp_typed) == (2, 3)
+    @test ndims(sp_typed) == 2
+    @test eltype(sp_typed) == Int
 end
 
 @testset "Domains - Size and Dimensionality" begin
@@ -40,8 +45,8 @@ end
     @test ndims(CoordinateSpace(5)) == 1
 
     # Type-based ndims
-    @test ndims(CoordinateSpace{3}) == 3
-    @test ndims(CoordinateSpace{1}) == 1
+    @test ndims(CoordinateSpace{Number, 3}) == 3
+    @test ndims(CoordinateSpace{Number, 1}) == 1
 end
 
 @testset "Domains - Axes" begin
@@ -201,52 +206,52 @@ end
     @test length(sp) == 42
 end
 
-@testset "Domains - TypedCoordinateSpace, ⊂ and promote_domain" begin
-    ts_int = LinOps.TypedCoordinateSpace(Int, (2, 3))
-    ts_float = LinOps.TypedCoordinateSpace(Float64, (2, 3))
-    ts_float_bad_sz = LinOps.TypedCoordinateSpace(Float64, (3, 2))
-    cs = CoordinateSpace((2, 3))
+@testset "Domains - CoordinateSpace, ⊂ and promote_domain" begin
+    cs_int = CoordinateSpace(Int, (2, 3))
+    cs_float = CoordinateSpace(Float64, (2, 3))
+    cs_float_bad_sz = CoordinateSpace(Float64, (3, 2))
+    cs = CoordinateSpace(Number, (2, 3))
 
-    @test size(ts_int) == (2, 3)
-    @test ndims(ts_int) == 2
-    @test eltype(ts_int) == Int
+    @test size(cs_int) == (2, 3)
+    @test ndims(cs_int) == 2
+    @test eltype(cs_int) == Int
 
-    @test zeros(Int, 2, 3) in ts_int
-    @test !(zeros(Float64, 2, 3) in ts_int)
-    @test !(zeros(Int, 3, 2) in ts_int)
+    @test zeros(Int, 2, 3) in cs_int
+    @test !(zeros(Float64, 2, 3) in cs_int)
+    @test !(zeros(Int, 3, 2) in cs_int)
 
     # Subset relation (\subset / ⊂): same shape and promotable element type.
-    @test LinOps.:(⊂)(ts_int, ts_float)
-    @test !LinOps.:(⊂)(ts_float, ts_int)
-    @test !LinOps.:(⊂)(ts_int, ts_float_bad_sz)
+    @test LinOps.:(⊂)(cs_int, cs_float)
+    @test !LinOps.:(⊂)(cs_float, cs_int)
+    @test !LinOps.:(⊂)(cs_int, cs_float_bad_sz)
 
-    @test LinOps.:(⊂)(ts_int, cs)
-    @test LinOps.:(⊂)(cs, ts_int)
+    @test LinOps.:(⊂)(cs_int, cs)
+    @test LinOps.:(⊂)(cs, cs_int)
 
-    @test LinOps.promote_domain(typeof(ts_int), typeof(ts_float)) == LinOps.TypedCoordinateSpace{Float64, 2}
-    @test LinOps.promote_domain(typeof(cs), typeof(ts_float)) == LinOps.TypedCoordinateSpace{Float64, 2}
-    @test LinOps.promote_domain(typeof(ts_int), typeof(cs)) == LinOps.TypedCoordinateSpace{Int, 2}
+    @test LinOps.promote_domain(typeof(cs_int), typeof(cs_float)) == CoordinateSpace{Float64, 2, AbstractArray}
+    @test LinOps.promote_domain(typeof(cs), typeof(cs_float)) == CoordinateSpace{Number, 2, AbstractArray}
+    @test LinOps.promote_domain(typeof(cs_int), typeof(cs)) == CoordinateSpace{Number, 2, AbstractArray}
 
-    cs2 = CoordinateSpace((4, 5))
-    @test LinOps.promote_domain(typeof(cs), typeof(cs2)) == CoordinateSpace{2}
+    cs2 = CoordinateSpace(Number, (4, 5))
+    @test LinOps.promote_domain(typeof(cs), typeof(cs2)) == CoordinateSpace{Number, 2, AbstractArray}
 end
 
-@testset "Domains - TypedCoordinateSpace constructors and adaptation" begin
-    ts1 = @inferred LinOps.TypedCoordinateSpace(Float32, 7)
-    @test size(ts1) == (7,)
-    @test eltype(ts1) == Float32
+@testset "Domains - CoordinateSpace constructors and adaptation" begin
+    cs1 = @inferred CoordinateSpace(Float32, (7,))
+    @test size(cs1) == (7,)
+    @test eltype(cs1) == Float32
 
-    ts0 = @inferred LinOps.TypedCoordinateSpace(Float32)
-    @test size(ts0) == ()
-    @test ndims(ts0) == 0
+    cs0 = @inferred CoordinateSpace(Float32, ())
+    @test size(cs0) == ()
+    @test ndims(cs0) == 0
 
-    ts_copy = @inferred LinOps.TypedCoordinateSpace(ts1)
-    @test ts_copy === ts1
+    cs_copy = @inferred CoordinateSpace(cs1)
+    @test cs_copy === cs1
 
-    z = @inferred zeros(ts1)
-    o = @inferred ones(ts1)
-    r = @inferred rand(ts1)
-    rn = @inferred randn(ts1)
+    z = @inferred zeros(cs1)
+    o = @inferred ones(cs1)
+    r = @inferred rand(cs1)
+    rn = @inferred randn(cs1)
     @test size(z) == (7,)
     @test size(o) == (7,)
     @test size(r) == (7,)
@@ -257,14 +262,13 @@ end
     @test eltype(rn) == Float32
 
     A = randn(Float64, 2, 2)
-    sim = @inferred similar(A, ts1)
+    sim = @inferred similar(A, cs1)
     @test size(sim) == (7,)
     @test eltype(sim) == Float32
 
-    ts_complex = LinOps.TypedCoordinateSpace(ComplexF64, (3,))
-    ts_real_target = @inferred adapt(Array{Float32}, ts_complex)
-    @test eltype(ts_real_target) == ComplexF32
-    @test size(ts_real_target) == (3,)
+    cs_complex = CoordinateSpace(ComplexF64, (3,))
+    cs_adapted = @inferred adapt(Array{Float32}, cs_complex)
+    @test cs_adapted === cs_complex
 
-    @test @inferred(LinOps.promote_domain(typeof(ts_complex), typeof(ts1))) == LinOps.TypedCoordinateSpace{ComplexF64, 1}
+    @test @inferred(LinOps.promote_domain(typeof(cs_complex), typeof(cs1))) == CoordinateSpace{ComplexF64, 1, AbstractArray}
 end

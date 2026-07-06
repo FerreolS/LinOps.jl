@@ -5,7 +5,7 @@ This module activates `has_operator(:nfft)` and provides NonuniformFFTs-backed
 `LinOpNFFT` constructors and adaptation methods.
 """
 module LinOpsNonuniformFFTsExt
-import LinOps: LinOpNFFT, TypedCoordinateSpace, inputtype, _dims2tuple
+import LinOps: LinOpNFFT, CoordinateSpace, inputtype, _dims2tuple
 import NonuniformFFTs: PlanNUFFT, exec_type1!, exec_type2!, set_points!
 
 using Adapt
@@ -39,8 +39,8 @@ function LinOpNFFT(
 
     if dims isa Colon
         plan_nufft = PlanNUFFT(T, sz; backend = backend, kwargs...)
-        outputspace = TypedCoordinateSpace(Complex{T1}, size(plan_nufft))
-        inputspace = TypedCoordinateSpace(T, (length(points[1]),))
+        outputspace = CoordinateSpace(Complex{T1}, size(plan_nufft), Array)
+        inputspace = CoordinateSpace(T, (length(points[1]),), Array)
     else
         dims = _dims2tuple(dims)
         ndd = length(dims)
@@ -50,8 +50,8 @@ function LinOpNFFT(
         else
             throw(ArgumentError("Unsupported dims argument: $dims, only Colon or first dimensions supported"))
         end
-        outputspace = TypedCoordinateSpace(Complex{T1}, tuple(size(plan_nufft)..., sz[(ndd + 1):end]...))
-        inputspace = TypedCoordinateSpace(T, (length(points[1]), sz[(ndd + 1):end]...))
+        outputspace = CoordinateSpace(Complex{T1}, tuple(size(plan_nufft)..., sz[(ndd + 1):end]...), Array)
+        inputspace = CoordinateSpace(T, (length(points[1]), sz[(ndd + 1):end]...), Array)
     end
     set_points!(plan_nufft, points)
 

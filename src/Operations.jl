@@ -18,16 +18,30 @@ end
 outputtype(A::LinOpCompose{O, I, L, R}, x) where {I, O, L, R} = outputtype(A.left, outputtype(A.right, x))
 
 
-function LinOpCompose(A::LinOp{IA, OA}, B::LinOp{IB, OB}) where {IA, OA, IB, OB}
+function LinOpCompose(A::LinOp, B::LinOp)
     outputspace(B) ⊂ inputspace(A) || throw(ArgumentError("The output space of the right operator should match the input space of the left operator"))
-    inspace = inputspace(B)
-    outspace = outputspace(A)
-    if IA <: TypedCoordinateSpace && IB <: CoordinateSpace
-        inspace = TypedCoordinateSpace(eltype(IA), size(inspace))
-    end
-    if OB <: TypedCoordinateSpace && IA <: CoordinateSpace
-        outspace = TypedCoordinateSpace(eltype(OB), size(outspace))
-    end
+
+    TIB = get_type(inputspace(B))
+    TIA = get_type(inputspace(A))
+    TOA = get_type(outputspace(A))
+    TOB = get_type(outputspace(B))
+
+    SIA = get_storage(inputspace(A))
+    SIB = get_storage(inputspace(B))
+    SOA = get_storage(outputspace(A))
+    SOB = get_storage(outputspace(B))
+
+    NIA = ndims(inputspace(A))
+    NOA = ndims(outputspace(A))
+
+    Ti = !isconcretetype(TIB) ? TIA : TIB
+    Si = !isconcretetype(SIB{Ti, NIA}) ? SIA : SIB
+    inspace = CoordinateSpace(Ti, inputsize(B), Si)
+
+    To = !isconcretetype(TOA) ? TOB : TOA
+    So = !isconcretetype(SOA{To, NOA}) ? SOB : SOA
+    outspace = CoordinateSpace(To, outputsize(A), So)
+
     return LinOpCompose(inspace, outspace, A, B)
 end
 

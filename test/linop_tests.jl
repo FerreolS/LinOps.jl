@@ -2,18 +2,18 @@ using LinearAlgebra: I, UniformScaling, mul!
 using LinOps: LinOp, LinOpDiag, CoordinateSpace, inputsize, outputsize, inputspace, outputspace
 import LinOps: apply_, apply_adjoint_
 
-struct ApplyOnlyOp <: LinOp{CoordinateSpace{1}, CoordinateSpace{1}}
-    inputspace::CoordinateSpace{1}
-    outputspace::CoordinateSpace{1}
+struct ApplyOnlyOp <: LinOp{CoordinateSpace{Number, 1, AbstractArray}, CoordinateSpace{Number, 1, AbstractArray}}
+    inputspace::CoordinateSpace{Number, 1, AbstractArray}
+    outputspace::CoordinateSpace{Number, 1, AbstractArray}
 end
 
 ApplyOnlyOp(n::Int) = ApplyOnlyOp(CoordinateSpace((n,)), CoordinateSpace((n,)))
 
 apply_(::ApplyOnlyOp, x) = 2 .* x
 
-struct AdjointOnlyOp <: LinOp{CoordinateSpace{1}, CoordinateSpace{1}}
-    inputspace::CoordinateSpace{1}
-    outputspace::CoordinateSpace{1}
+struct AdjointOnlyOp <: LinOp{CoordinateSpace{Number, 1, AbstractArray}, CoordinateSpace{Number, 1, AbstractArray}}
+    inputspace::CoordinateSpace{Number, 1, AbstractArray}
+    outputspace::CoordinateSpace{Number, 1, AbstractArray}
 end
 
 AdjointOnlyOp(n::Int) = AdjointOnlyOp(CoordinateSpace((n,)), CoordinateSpace((n,)))
@@ -21,9 +21,9 @@ AdjointOnlyOp(n::Int) = AdjointOnlyOp(CoordinateSpace((n,)), CoordinateSpace((n,
 apply_(::AdjointOnlyOp, x) = 3 .* x
 apply_adjoint_(::AdjointOnlyOp, x) = 5 .* x
 
-struct NoApplyOp <: LinOp{CoordinateSpace{1}, CoordinateSpace{1}}
-    inputspace::CoordinateSpace{1}
-    outputspace::CoordinateSpace{1}
+struct NoApplyOp <: LinOp{CoordinateSpace{Number, 1, AbstractArray}, CoordinateSpace{Number, 1, AbstractArray}}
+    inputspace::CoordinateSpace{Number, 1, AbstractArray}
+    outputspace::CoordinateSpace{Number, 1, AbstractArray}
 end
 
 NoApplyOp(n::Int) = NoApplyOp(CoordinateSpace((n,)), CoordinateSpace((n,)))

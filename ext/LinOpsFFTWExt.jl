@@ -10,7 +10,7 @@ import Adapt: adapt_structure
 import FFTW
 import FFTW: fftwComplex, fftwReal, fftwNumber, plan_brfft, plan_rfft, plan_fft, plan_bfft
 import LinOps
-import LinOps: TypedCoordinateSpace, LinOpDFT, apply_!, apply_adjoint_!, inputsize, outputsize,
+import LinOps: CoordinateSpace, LinOpDFT, apply_!, apply_adjoint_!, inputsize, outputsize,
     outputtype, LinOpAdjoint, inputtype
 
 LinOps.has_operator(::Val{:dft}) = true
@@ -59,8 +59,8 @@ function LinOpDFT(
 
     # Build operator.
 
-    inputspace = TypedCoordinateSpace(T, forward.sz)
-    outputspace = TypedCoordinateSpace(Complex{T}, forward.osz)
+    inputspace = CoordinateSpace(T, forward.sz, Array)
+    outputspace = CoordinateSpace(Complex{T}, forward.osz, Array)
     return LinOpDFT(inputspace, outputspace, dims, forward, backward)
 end
 
@@ -101,8 +101,8 @@ function LinOpDFT(
 
     # Build operator.
 
-    inputspace = TypedCoordinateSpace(T, forward.sz)
-    outputspace = TypedCoordinateSpace(T, forward.osz)
+    inputspace = CoordinateSpace(T, forward.sz, Array)
+    outputspace = CoordinateSpace(T, forward.osz, Array)
     return LinOpDFT(inputspace, outputspace, dims, forward, backward)
 end
 
@@ -161,8 +161,8 @@ function Adapt.adapt_structure(::Type{A}, x::LinOpDFT) where {T <: fftwNumber, A
 
 
     # Build operator.
-    inputspace = TypedCoordinateSpace(T, forward.sz)
-    outputspace = TypedCoordinateSpace(T, forward.osz)
+    inputspace = CoordinateSpace(T, forward.sz, Array)
+    outputspace = CoordinateSpace(T, forward.osz, Array)
     return LinOpDFT(inputspace, outputspace, x.dims, forward, backward)
 
 end

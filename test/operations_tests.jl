@@ -1,5 +1,5 @@
 using LinearAlgebra: I, UniformScaling, mul!
-using LinOps: LinOp, LinOpDiag, CoordinateSpace, TypedCoordinateSpace, inputspace, outputspace, outputtype
+using LinOps: LinOp, LinOpDiag, CoordinateSpace, inputspace, outputspace, outputtype
 import LinOps: apply_, apply_!, apply_adjoint_, apply_adjoint_!
 
 struct ScaleOp{I, O} <: LinOp{I, O}
@@ -30,15 +30,15 @@ apply_adjoint_(A::ScaleOp, x) = A.a .* x
 apply_adjoint_!(y, A::ScaleOp, x) = (@. y = A.a * x)
 
 @testset "Operations - LinOpCompose domain promotion branches" begin
-    left_typed = ScaleOp(TypedCoordinateSpace(Float32, (3,)), CoordinateSpace((3,)), 2.0)
+    left_typed = ScaleOp(CoordinateSpace(Float32, (3,)), CoordinateSpace((3,)), 2.0)
     right_coord = ScaleOp(CoordinateSpace((3,)), CoordinateSpace((3,)), 3.0)
     C1 = left_typed * right_coord
-    @test inputspace(C1) == TypedCoordinateSpace(Float32, (3,))
+    @test inputspace(C1) == CoordinateSpace(Float32, (3,))
 
     left_coord = ScaleOp(CoordinateSpace((3,)), CoordinateSpace((3,)), 2.0)
-    right_typed_out = ScaleOp(CoordinateSpace((3,)), TypedCoordinateSpace(Float32, (3,)), 3.0)
+    right_typed_out = ScaleOp(CoordinateSpace((3,)), CoordinateSpace(Float32, (3,)), 3.0)
     C2 = left_coord * right_typed_out
-    @test outputspace(C2) == TypedCoordinateSpace(Float32, (3,))
+    @test outputspace(C2) == CoordinateSpace(Float32, (3,))
 end
 
 @testset "Operations - LinOpCompose simplify and in-place paths" begin

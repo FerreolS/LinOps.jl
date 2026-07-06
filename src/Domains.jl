@@ -15,9 +15,9 @@ Base.axes(A::AbstractDomain{N}, d::Int) where {N} =
     d < 1 ? throw(BoundsError(axes(A), d)) : (d <= N ? axes(A)[d] : Base.OneTo(1))
 
 
-Base.length(sp::AbstractDomain) = prod(sp.size)
-Base.ndims(::AbstractDomain{N}) where {N} = N
-Base.ndims(::Type{<:AbstractDomain{N}}) where {N} = N
+@inline Base.length(sp::AbstractDomain) = prod(sp.size)
+@inline Base.ndims(::AbstractDomain{N}) where {N} = N
+@inline Base.ndims(::Type{<:AbstractDomain{N}}) where {N} = N
 
 Base.eltype(::Type{<:AbstractDomain}) = Bool
 Base.eltype(::AbstractDomain) = Bool
@@ -51,56 +51,64 @@ Adapt.adapt_structure(::Any, x::AbstractDomain) = x
 
 Shape-only domain descriptor.
 
-Use `CoordinateSpace((n1, n2, ...))` when only array dimensions matter.
+Use `CoordinateSpace((n1, n2, ...))` when only array dimensions matter,
+or `CoordinateSpace(T, (n1, n2, ...))` to constrain element type.
 """
-struct CoordinateSpace{N} <: AbstractDomain{N}
+struct CoordinateSpace{T, N, A} <: AbstractDomain{N}
     size::NTuple{N, Int}
-    CoordinateSpace(sz::NTuple{N, Int}) where {N} = new{N}(sz)
+    function CoordinateSpace(T::Type, sz::NTuple{N, Int}, A::Type) where {N}
+        T <: Number || throw(ArgumentError("CoordinateSpace element type must be a subtype of Number"))
+        A <: AbstractArray || throw(ArgumentError("CoordinateSpace array type must be a subtype of AbstractArray"))
+        return new{T, N, A}(sz)
+    end
 end
 
-CoordinateSpace(sz::Int) = CoordinateSpace(Tuple(sz))
-CoordinateSpace() = CoordinateSpace(())
+CoordinateSpace() = CoordinateSpace(Number, ())
+CoordinateSpace(sz::Int) = CoordinateSpace(Number, Tuple(sz))
+CoordinateSpace(sz::NTuple{N, Int}) where {N} = CoordinateSpace(Number, sz)
+CoordinateSpace(T::Type, sz::NTuple{N, Int}) where {N} = CoordinateSpace(T, sz, AbstractArray)
 CoordinateSpace(sp::CoordinateSpace) = sp
 
-Base.in(x::AbstractArray{T, N}, sp::CoordinateSpace{N}) where {T, N} = (size(sp) == size(x))
 
-"""
-    TypedCoordinateSpace{T,N}
+Base.eltype(::Type{<:CoordinateSpace{T, N}}) where {T, N} = isconcretetype(T) ? T : Bool
+Base.eltype(::CoordinateSpace{T, N}) where {T, N} = isconcretetype(T) ? T : Bool
 
-Domain descriptor carrying both shape and element type `T`.
-"""
-struct TypedCoordinateSpace{T, N} <: AbstractDomain{N}
-    size::NTuple{N, Int}
-    TypedCoordinateSpace(T::Type, sz::NTuple{N, Int}) where {N} = new{T, N}(sz)
+
+@inline get_type(::Type{<:CoordinateSpace{T, N}}) where {T, N} = T
+@inline get_type(::CoordinateSpace{T, N}) where {T, N} = T
+
+
+@inline get_storage(::CoordinateSpace{T, N, A}) where {T, N, A} = A
+@inline get_storage(::Type{CoordinateSpace{T, N, A}}) where {T, N, A} = A
+
+@inline function Base.in(x::AbstractArray{T1, N}, sp::CoordinateSpace{T2, N, A}) where {T1, N, T2, A}
+    return (size(sp) == size(x)) && (x isa A) && ((T1 <: T2) ||  (promote_type(T1, T2) <: T2))
 end
 
-Base.in(x::AbstractArray{T, N}, sp::TypedCoordinateSpace{T, N}) where {T, N} = (size(sp) == size(x))
-⊂(in::TypedCoordinateSpace{T, N}, sp::TypedCoordinateSpace{T, N}) where {T, N} = (size(sp) == size(in))
-⊂(in::TypedCoordinateSpace{T1, N}, sp::TypedCoordinateSpace{T2, N}) where {T1, T2, N} = (size(sp) == size(in)) && promote_type(T1, T2) == T2
-⊂(in::AbstractDomain{N}, sp::TypedCoordinateSpace{T, N}) where {T, N} = (size(sp) == size(in))
-⊂(in::TypedCoordinateSpace{T, N}, sp::AbstractDomain{N}) where {T, N} = (size(sp) == size(in))
+⊂(in::CoordinateSpace{T, N, A}, sp::CoordinateSpace{T, N, A}) where {T, N, A} = (size(sp) == size(in))
+⊂(in::CoordinateSpace{T1, N, A}, sp::CoordinateSpace{T2, N, A}) where {N, T1, T2, A} = (size(sp) == size(in)) && (!isconcretetype(T1) || !isconcretetype(T2) || promote_type(T1, T2) == T2)
+⊂(in::CoordinateSpace{T1, N, A1}, sp::CoordinateSpace{T2, N, A2}) where {N, T1, T2, A1, A2} = (size(sp) == size(in)) && (!isconcretetype(T1) || !isconcretetype(T2) || promote_type(T1, T2) == T2)&& A1 <: A2
 
-
-TypedCoordinateSpace(T::Type, sz::Int) = TypedCoordinateSpace(T, Tuple(sz))
-TypedCoordinateSpace(T::Type) = TypedCoordinateSpace(T, ())
-TypedCoordinateSpace(sp::TypedCoordinateSpace) = sp
-
-Adapt.adapt_structure(_, x::TypedCoordinateSpace) = x
-function Adapt.adapt_structure(::Type{<:AbstractArray{T}}, x::TypedCoordinateSpace{Tx}) where {T, Tx}
-    Tx <: Complex && T <: Real && return TypedCoordinateSpace(Complex{T}, size(x))
-    return TypedCoordinateSpace(T, size(x))
+@inline function Base.zeros(sp::CoordinateSpace{T, N, A}) where {T, N, A}
+    To = isconcretetype(T) ? T : Float64
+    Ao = isconcretetype(A{To, N}) ? A : Array
+    return fill!(Ao{To, N}(undef, size(sp)), zero(To))
+end
+@inline function Base.ones(sp::CoordinateSpace{T, N, A}) where {T, N, A}
+    To = isconcretetype(T) ? T : Float64
+    Ao = isconcretetype(A{To, N}) ? A : Array
+    return fill!(Ao{To, N}(undef, size(sp)), one(To))
 end
 
-
-Base.eltype(::Type{TypedCoordinateSpace{T, N}}) where {T, N} = T
-Base.eltype(::TypedCoordinateSpace{T, N}) where {T, N} = T
-
-Base.zeros(sp::TypedCoordinateSpace{T}) where {T} = zeros(T, size(sp))
-Base.ones(sp::TypedCoordinateSpace{T}) where {T} = ones(T, size(sp))
-Base.rand(sp::TypedCoordinateSpace{T}) where {T} = rand(T, size(sp)...)
-Base.randn(sp::TypedCoordinateSpace{T}) where {T} = randn(T, size(sp))
-
-Base.similar(A::AbstractArray, sp::TypedCoordinateSpace{T}) where {T} = similar(A, T, size(sp))
+Base.rand(sp::CoordinateSpace{T, N, <:Union{Array, AbstractArray}}) where {T, N} = isconcretetype(T) ? rand(T, size(sp)) : rand(Float64, size(sp))
+Base.randn(sp::CoordinateSpace{T, N, <:Union{Array, AbstractArray}}) where {T, N} = isconcretetype(T) ? randn(T, size(sp)) : randn(Float64, size(sp))
+Base.similar(t::Type, sp::CoordinateSpace{T, N, <:Union{Array, AbstractArray}}) where {T, N} = similar(t, size(sp))
+@inline Base.similar(A::AbstractArray, sp::CoordinateSpace{T, N}) where {T, N} = isconcretetype(T) ? similar(A, T, size(sp)) : similar(A, size(sp))
+@inline function Base.similar(sp::CoordinateSpace{T, N, A}) where {T, N, A}
+    To = isconcretetype(T) ? T : Float64
+    Ao = isconcretetype(A{To, N}) ? A : Array
+    return similar(Ao{To, N}, size(sp))
+end
 
 
 """
@@ -108,7 +116,7 @@ Base.similar(A::AbstractArray, sp::TypedCoordinateSpace{T}) where {T} = similar(
 
 Return a domain type able to represent values compatible with domains `A` and `B`.
 """
-promote_domain(::Type{<:AbstractDomain{N}}, ::Type{<:AbstractDomain{N}}) where {N} = CoordinateSpace{N}
-promote_domain(::Type{<:TypedCoordinateSpace{T1, N}}, ::Type{<:TypedCoordinateSpace{T2, N}}) where {T1, T2, N} = TypedCoordinateSpace{promote_type(T1, T2), N}
-promote_domain(::Type{<:AbstractDomain{N}}, ::Type{<:TypedCoordinateSpace{T, N}}) where {T, N} = TypedCoordinateSpace{T, N}
-promote_domain(::Type{<:TypedCoordinateSpace{T, N}}, ::Type{<:AbstractDomain{N}}) where {T, N} = TypedCoordinateSpace{T, N}
+promote_domain(::Type{<:AbstractDomain{N}}, ::Type{<:AbstractDomain{N}}) where {N} = CoordinateSpace{Number, N, AbstractArray}
+promote_domain(::Type{CoordinateSpace{T1, N, AbstractArray}}, ::Type{CoordinateSpace{T2, N, AbstractArray}}) where {T1, N, T2} = CoordinateSpace{promote_type(T1, T2), N, AbstractArray}
+promote_domain(::Type{CoordinateSpace{T1, N, A}}, ::Type{CoordinateSpace{T2, N, AbstractArray}}) where {T1, N, T2, A} = CoordinateSpace{promote_type(T1, T2), N, A}
+promote_domain(::Type{CoordinateSpace{T1, N, AbstractArray}}, ::Type{CoordinateSpace{T2, N, A}}) where {T1, N, T2, A} = CoordinateSpace{promote_type(T1, T2), N, A}

@@ -18,7 +18,8 @@ using AbstractFFTs,
     ChainRulesCore,
     KernelAbstractions,
     LinearAlgebra,
-    StaticArrays
+    StaticArrays,
+    TypeUtils
 
 import LinearAlgebra:
     mul!,
@@ -46,7 +47,7 @@ export I,
 VERSION >= v"1.11.0-DEV.469" && eval(
     Meta.parse(
         string(
-            "public AbstractDomain, CoordinateSpace, TypedCoordinateSpace, LinOpAdjoint, apply_, apply_!, apply_adjoint_, apply_adjoint_!, inputtype, outputtype, inputspace, outputspace, isendomorphism, promote_domain, ⊂ "
+            "public AbstractDomain, CoordinateSpace, LinOpAdjoint, apply_, apply_!, apply_adjoint_, apply_adjoint_!, inputtype, outputtype, inputspace, outputspace, isendomorphism, promote_domain, ⊂ "
         )
     )
 )

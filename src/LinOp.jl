@@ -32,13 +32,10 @@ outputtype(A::AbstractMatrix, x) = typeof(oneunit(eltype(A)) * oneunit(eltype(x)
 """Infer input element type expected by `A` for an input like `x`."""
 inputtype(A::LinOp, x) = typeof(oneunit(eltype(inputspace(A))) * oneunit(eltype(x)))
 
-inputtype(::LinOp{I}, _) where {T, I <: TypedCoordinateSpace{T}} = T
-outputtype(::LinOp{I, O}, _) where {T, I <: AbstractDomain, O <: TypedCoordinateSpace{T}} = T
+inputtype(::LinOp{I}, _) where {T, N, I <: CoordinateSpace{T, N}} = T
 
 """Return input scalar type for typed-domain operators."""
-inputtype(::LinOp{I}) where {T, I <: TypedCoordinateSpace{T}} = T
-"""Return output scalar type for typed-domain operators."""
-outputtype(::LinOp{I, O}) where {T, I <: AbstractDomain, O <: TypedCoordinateSpace{T}} = T
+inputtype(::LinOp{I}) where {T, N, I <: CoordinateSpace{T, N}} = T
 
 inputtype(A::UniformScaling, x) = outputtype(A, x)
 inputtype(A::AbstractMatrix, x) = outputtype(A, x)
