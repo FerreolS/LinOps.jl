@@ -46,7 +46,9 @@ function LinOpMapslice(sz::NTuple, operator::LinOp{I, O}, dims::NTuple{N, Int}) 
     dimsvec = _validate_mapslice_dims(sz, dims)
     sz[dimsvec] == inputsize(operator) || throw(ArgumentError("The size of the operator does not match the selected dimensions"))
 
-    if I <: TypedCoordinateSpace
+    if I <: DeviceTypedCoordinateSpace
+        inputspace = DeviceTypedCoordinateSpace(eltype(I), sz, get_storage(I))
+    elseif I <: TypedCoordinateSpace
         inputspace = TypedCoordinateSpace(eltype(I), sz)
     else
         inputspace = CoordinateSpace(sz)
@@ -99,8 +101,8 @@ function LinOpMapslice(sz::NTuple{N, Int}, operators::AbstractArray{<:AbstractMa
     sz[dimsvec[1]] == size(first(operators), 2) || throw(ArgumentError("The size of the operator does not match the selected dimension"))
     outputsz = (sz[1:(dims[1] - 1)]..., size(first(operators), 1), sz[(dims[1] + 1):length(sz)]...)
 
-    inputspace = CoordinateSpace(sz)
-    outputspace = CoordinateSpace(outputsz)
+    inputspace = DeviceTypedCoordinateSpace(sz, typeof(first(operators)))
+    outputspace = DeviceTypedCoordinateSpace(outputsz, typeof(first(operators)))
     return LinOpMapslice(inputspace, outputspace, operators, tuple(dims...))
 end
 
@@ -235,12 +237,16 @@ function build_spaces(operators, inputsz, outputsz)
     outputdomain = mapreduce(x -> typeof(outputspace(x)), promote_domain, operators)
     inputdomain = mapreduce(x -> typeof(inputspace(x)), promote_domain, operators)
 
-    if inputdomain === TypedCoordinateSpace
+    if inputdomain === DeviceTypedCoordinateSpace
+        ginputspace = DeviceTypedCoordinateSpace(eltype(inputdomain), inputsz, get_storage(inputdomain))
+    elseif inputdomain === TypedCoordinateSpace
         ginputspace = TypedCoordinateSpace(eltype(inputdomain), inputsz)
     else
         ginputspace = CoordinateSpace(inputsz)
     end
-    if outputdomain === TypedCoordinateSpace
+    if outputdomain === DeviceTypedCoordinateSpace
+        goutputspace = DeviceTypedCoordinateSpace(eltype(outputdomain), outputsz, get_storage(outputdomain)) 
+    elseif outputdomain === TypedCoordinateSpace
         goutputspace = TypedCoordinateSpace(eltype(outputdomain), outputsz)
     else
         goutputspace = CoordinateSpace(outputsz)

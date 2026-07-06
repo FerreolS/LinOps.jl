@@ -269,20 +269,20 @@ end
     @test @inferred(LinOps.promote_domain(typeof(ts_complex), typeof(ts1))) == LinOps.TypedCoordinateSpace{ComplexF64, 1}
 end
 
-@testset "Domains - StoredCoordinateSpace" begin
-    sp = @inferred LinOps.StoredCoordinateSpace(Float32, (2, 3), Array{Float32, 2})
-    @test typeof(sp) == LinOps.StoredCoordinateSpace{Float32, 2, Matrix{Float32}}
+@testset "Domains - DeviceTypedCoordinateSpace" begin
+    sp = @inferred LinOps.DeviceTypedCoordinateSpace(Float32, (2, 3), Array{Float32, 2})
+    @test typeof(sp) == LinOps.DeviceTypedCoordinateSpace{Float32, 2, Matrix{Float32}}
     @test size(sp) == (2, 3)
     @test ndims(sp) == 2
     @test eltype(sp) == Float32
     @test LinOps.get_storage(sp) == Array{Float32, 2}
 
-    sp_from_int = @inferred LinOps.StoredCoordinateSpace(Float32, 7, Array{Float32, 1})
+    sp_from_int = @inferred LinOps.DeviceTypedCoordinateSpace(Float32, 7, Array{Float32, 1})
     @test size(sp_from_int) == (7,)
     @test ndims(sp_from_int) == 1
     @test LinOps.get_storage(sp_from_int) == Array{Float32, 1}
 
-    sp_copy = @inferred LinOps.StoredCoordinateSpace(sp)
+    sp_copy = @inferred LinOps.DeviceTypedCoordinateSpace(sp)
     @test sp_copy === sp
 
     @test zeros(Float32, 2, 3) in sp
@@ -305,7 +305,7 @@ end
     @test eltype(simA) == Float32
 
     sp_adapted = @inferred adapt(Array{Float32, 2}, sp)
-    @test typeof(sp_adapted) == LinOps.StoredCoordinateSpace{Float32, 2, Matrix{Float32}}
+    @test typeof(sp_adapted) == LinOps.DeviceTypedCoordinateSpace{Float32, 2, Matrix{Float32}}
     @test size(sp_adapted) == (2, 3)
     @test eltype(sp_adapted) == Float32
     @test LinOps.get_storage(sp_adapted) == Array{Float32, 2}
@@ -316,16 +316,16 @@ end
     @test LinOps.get_storage(sp_adapted_any) == Array{Float32, 2}
 
     # Complex -> real target should preserve complex structure with promoted real type.
-    sp_complex = LinOps.StoredCoordinateSpace(ComplexF64, (2, 3), Array{ComplexF64, 2})
+    sp_complex = LinOps.DeviceTypedCoordinateSpace(ComplexF64, (2, 3), Array{ComplexF64, 2})
     sp_complex_adapt = @inferred adapt(Array{Float32, 2}, sp_complex)
     @test eltype(sp_complex_adapt) == ComplexF32
     @test LinOps.get_storage(sp_complex_adapt) == Array{ComplexF32, 2}
 
     ts = @inferred LinOps.TypedCoordinateSpace(Float64, (2, 3))
     cs = @inferred LinOps.CoordinateSpace((2, 3))
-    @test LinOps.promote_domain(typeof(sp), typeof(sp_adapted)) == LinOps.StoredCoordinateSpace{Float32, 2}
-    @test LinOps.promote_domain(typeof(ts), typeof(sp)) == LinOps.StoredCoordinateSpace{Float64, 2}
-    @test LinOps.promote_domain(typeof(sp), typeof(ts)) == LinOps.StoredCoordinateSpace{Float64, 2}
-    @test LinOps.promote_domain(typeof(cs), typeof(sp)) == LinOps.StoredCoordinateSpace{Float32, 2}
-    @test LinOps.promote_domain(typeof(sp), typeof(cs)) == LinOps.StoredCoordinateSpace{Float32, 2}
+    @test LinOps.promote_domain(typeof(sp), typeof(sp_adapted)) == LinOps.DeviceTypedCoordinateSpace{Float32, 2,Matrix{Float32}}
+    @test LinOps.promote_domain(typeof(ts), typeof(sp)) == LinOps.DeviceTypedCoordinateSpace{Float64, 2, Matrix{Float64}}
+    @test LinOps.promote_domain(typeof(sp), typeof(ts)) == LinOps.DeviceTypedCoordinateSpace{Float64, 2, Matrix{Float64}}
+    @test LinOps.promote_domain(typeof(cs), typeof(sp)) == LinOps.DeviceTypedCoordinateSpace{Float32, 2, Matrix{Float32}}
+    @test LinOps.promote_domain(typeof(sp), typeof(cs)) == LinOps.DeviceTypedCoordinateSpace{Float32, 2, Matrix{Float32}}
 end

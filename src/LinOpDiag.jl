@@ -18,8 +18,7 @@ struct LinOpDiag{I, D <: AbstractArray} <: LinOp{I, I}
 end
 
 function LinOpDiag(diag::D) where {D <: AbstractArray}
-    inspace = CoordinateSpace(size(diag))
-    return LinOpDiag(inspace, diag)
+    return LinOpDiag(DeviceTypedCoordinateSpace(diag), diag)
 end
 
 outputspace(A::LinOpDiag) = inputspace(A)
