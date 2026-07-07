@@ -88,6 +88,7 @@ end
 ⊂(in::CoordinateSpace{T, N, A}, sp::CoordinateSpace{T, N, A}) where {T, N, A} = (size(sp) == size(in))
 ⊂(in::CoordinateSpace{T1, N, A}, sp::CoordinateSpace{T2, N, A}) where {N, T1, T2, A} = (size(sp) == size(in)) && (!isconcretetype(T1) || !isconcretetype(T2) || promote_type(T1, T2) == T2)
 ⊂(in::CoordinateSpace{T1, N, A1}, sp::CoordinateSpace{T2, N, A2}) where {N, T1, T2, A1, A2} = (size(sp) == size(in)) && (!isconcretetype(T1) || !isconcretetype(T2) || promote_type(T1, T2) == T2)&& A1 <: A2
+⊂(in::CoordinateSpace{T1, N, AbstractArray}, sp::CoordinateSpace{T2, N}) where {N, T1, T2} = (size(sp) == size(in)) && (!isconcretetype(T1) || !isconcretetype(T2) || promote_type(T1, T2) == T2)
 
 @inline function Base.zeros(sp::CoordinateSpace{T, N, A}) where {T, N, A}
     To = isconcretetype(T) ? T : Float64
