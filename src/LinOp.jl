@@ -7,7 +7,7 @@ Custom operators should subtype `LinOp` and implement forward application via `a
 or `apply_!`. Implement `apply_adjoint_`/`apply_adjoint_!` for explicit adjoint support.
 """
 abstract type LinOp{I <: AbstractDomain, O <: AbstractDomain} end
-
+Base.eltype(::LinOp) = Bool
 
 """Return the input domain of operator `A`."""
 inputspace(A::LinOp) = A.inputspace
@@ -24,20 +24,13 @@ outputsize(A::LinOp) = size(outputspace(A))
 Base.size(A::LinOp) = (outputsize(A), inputsize(A))
 
 """Infer output element type for applying `A` to `x`."""
-outputtype(A::LinOp, x) = typeof(oneunit(eltype(outputspace(A))) * oneunit(eltype(x)))
-outputtype(A::LinOp) = eltype(outputspace(A))
-
+@inline function outputtype(A::LinOp, x)
+    T = get_type(outputspace(A))
+    isconcretetype(T) && return T
+    return typeof(oneunit(eltype(A)) * oneunit(eltype(x)))
+end
 outputtype(A::UniformScaling, x) = typeof(oneunit(eltype(A)) * oneunit(eltype(x)))
 outputtype(A::AbstractMatrix, x) = typeof(oneunit(eltype(A)) * oneunit(eltype(x)))
-"""Infer input element type expected by `A` for an input like `x`."""
-inputtype(A::LinOp, x) = typeof(oneunit(eltype(inputspace(A))) * oneunit(eltype(x)))
-
-
-"""Return input scalar type for typed-domain operators."""
-inputtype(::LinOp{I}) where {T, N, I <: CoordinateSpace{T, N}} = T
-
-inputtype(A::UniformScaling, x) = outputtype(A, x)
-inputtype(A::AbstractMatrix, x) = outputtype(A, x)
 
 
 """Return `true` when `A` maps a domain to itself."""
@@ -188,12 +181,17 @@ Base.adjoint(A::LinOpAdjoint) = parent(A)
 function Base.summary(A::LinOpAdjoint)
     return "LinOpAdjoint of $(summary(parent(A)))"
 end
-outputtype(A::LinOpAdjoint, x) = inputtype(parent(A), x)
-inputtype(A::LinOpAdjoint, x) = outputtype(parent(A), x)
+Base.eltype(A::LinOpAdjoint) = eltype(parent(A))
 inputsize(A::LinOpAdjoint) = outputsize(parent(A))
 outputsize(A::LinOpAdjoint) = inputsize(parent(A))
 inputspace(A::LinOpAdjoint) = outputspace(parent(A))
 outputspace(A::LinOpAdjoint) = inputspace(parent(A))
+
+@inline function outputtype(A::LinOpAdjoint, x)
+    T = get_type(inputspace(parent(A)))
+    isconcretetype(T) && return T
+    return typeof(oneunit(eltype(A)) * oneunit(eltype(x)))
+end
 
 
 function apply_!(y, A::LinOpAdjoint, x)

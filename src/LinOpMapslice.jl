@@ -22,10 +22,6 @@ struct LinOpMapslice{I, O, P, D} <: LinOp{I, O}
         return new{I, O, P, typeof(dims)}(inputspace, outputspace, operator, dims)
     end
 end
-
-outputtype(A::LinOpMapslice{I, O, <:LinOp}, x) where {I, O} = outputtype(A.operator, x)
-outputtype(A::LinOpAdjoint{O, I, <:LinOpMapslice{I, O, <:LinOp}}, x) where {I, O} = outputtype(adjoint(parent(A).operator), x)
-
 LinOpMapslice(sz::NTuple, operator; dims) = LinOpMapslice(sz, operator, _dims2tuple(dims))
 
 LinOpMapslice(sz::NTuple, operator, dims::Integer) = LinOpMapslice(sz, operator; dims)
@@ -97,6 +93,10 @@ function LinOpMapslice(sz::NTuple{N, Int}, operators::AbstractArray{<:AbstractMa
     outputspace = CoordinateSpace(Number, outputsz, parameterless(typeof(first(operators))))
     return LinOpMapslice(inputspace, outputspace, operators, tuple(dims...))
 end
+
+Base.eltype(A::LinOpMapslice{I, O, <:LinOp}) where {I, O} = eltype(A.operator)
+Base.eltype(A::LinOpMapslice{I, O, <:AbstractArray{<:Number}}) where {I, O} = eltype(A.operator)
+Base.eltype(A::LinOpMapslice{I, O, <:AbstractArray}) where {I, O} = eltype(first(A.operator))
 
 Adapt.adapt_structure(to, x::LinOpMapslice{I, O, <:AbstractArray{<:Number}}) where {I, O} = LinOpMapslice(adapt(to, inputspace(x)), adapt(to, outputspace(x)), adapt(to, x.operator), x.dims)
 Adapt.adapt_structure(to, x::LinOpMapslice{I, O, <:AbstractArray}) where {I, O} = LinOpMapslice(adapt(to, inputspace(x)), adapt(to, outputspace(x)), adapt.(to, x.operator), x.dims)

@@ -5,7 +5,7 @@ This module activates `has_operator(:nfft)` and provides NonuniformFFTs-backed
 `LinOpNFFT` constructors and adaptation methods.
 """
 module LinOpsNonuniformFFTsExt
-import LinOps: LinOpNFFT, CoordinateSpace, inputtype, _dims2tuple
+import LinOps: LinOpNFFT, CoordinateSpace, _dims2tuple
 import NonuniformFFTs: PlanNUFFT, exec_type1!, exec_type2!, set_points!
 
 using Adapt

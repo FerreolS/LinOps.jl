@@ -15,8 +15,7 @@ struct LinOpCompose{I, O, L <: Union{UniformScaling, LinOp}, R <: LinOp} <: LinO
     right::R
 end
 
-outputtype(A::LinOpCompose{O, I, L, R}, x) where {I, O, L, R} = outputtype(A.left, outputtype(A.right, x))
-
+Base.eltype(A::LinOpCompose) = eltype(oneunit(eltype(A.left)) * oneunit(eltype(A.right)))
 
 function LinOpCompose(A::LinOp, B::LinOp)
     outputspace(B) ⊂ inputspace(A) || throw(ArgumentError("The output space of the right operator should match the input space of the left operator"))
@@ -153,6 +152,8 @@ struct LinOpSum{I, O, L <: Union{UniformScaling, LinOp}, R <: LinOp} <: LinOp{I,
     left::L
     right::R
 end
+
+Base.eltype(A::LinOpSum) = eltype(oneunit(eltype(A.left)) + oneunit(eltype(A.right)))
 
 function LinOpSum(A::LinOp, B::LinOp)
     inputspace(A) == inputspace(B) || throw(ArgumentError("The input spaces of the two operators should match"))

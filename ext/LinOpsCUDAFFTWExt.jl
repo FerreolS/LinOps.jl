@@ -10,7 +10,7 @@ using CUDA
 import Adapt
 import Adapt.adapt_structure
 using LinOps #: LinOpDFT, inputsize, outputsize, outputtype, inputtype,AbstractDomain
-using LinOps: CoordinateSpace, AbstractDomain, inputtype
+using LinOps: CoordinateSpace, AbstractDomain
 
 
 """

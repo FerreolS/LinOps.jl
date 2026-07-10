@@ -11,7 +11,7 @@ import FFTW
 import FFTW: fftwComplex, fftwReal, fftwNumber, plan_brfft, plan_rfft, plan_fft, plan_bfft
 import LinOps
 import LinOps: CoordinateSpace, LinOpDFT, apply_!, apply_adjoint_!, inputsize, outputsize,
-    outputtype, LinOpAdjoint, inputtype
+    outputtype, LinOpAdjoint
 
 LinOps.has_operator(::Val{:dft}) = true
 LinOps.operator_backend(::Val{:dft}) = :fftw

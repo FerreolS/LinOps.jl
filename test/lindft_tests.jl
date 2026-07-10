@@ -193,7 +193,6 @@ end
     Ar = Adapt.adapt(Array{Float32}, Fr)
     @test Ar isa LinOp
     @test inputsize(Ar) == inputsize(Fr)
-    @test inputtype(Ar) == Float32
 
     Fc = LinOpDFT(ComplexF64, (8, 6))
     Ac = Adapt.adapt(Array{ComplexF32}, Fc)
