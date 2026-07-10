@@ -2,7 +2,7 @@ using Random
 using LinearAlgebra: dot, mul!
 using Adapt
 using FFTW
-using LinOps: LinOpDFT, LinOpDiag, LinOp, CoordinateSpace, inputspace, outputspace, inputsize, outputsize, inputtype, outputtype, isendomorphism
+using LinOps: LinOpDFT, LinOpDiag, LinOp, CoordinateSpace, inputspace, outputspace, inputsize, outputsize, outputtype, isendomorphism
 
 @testset "LinOpDFT - Real to complex 1D" begin
     N = 16

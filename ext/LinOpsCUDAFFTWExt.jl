@@ -9,7 +9,7 @@ using FFTW
 using CUDA
 import Adapt
 import Adapt.adapt_structure
-using LinOps #: LinOpDFT, inputsize, outputsize, outputtype, inputtype,AbstractDomain
+using LinOps #: LinOpDFT, inputsize, outputsize, outputtype,AbstractDomain
 using LinOps: CoordinateSpace, AbstractDomain
 
 
@@ -19,7 +19,7 @@ using LinOps: CoordinateSpace, AbstractDomain
 Adapt a `LinOpDFT` to a CUDA array backend using the operator input scalar type.
 """
 function Adapt.adapt_structure(::Type{CUDA.CuArray}, x::LinOpDFT)
-    return Adapt.adapt_structure(CUDA.CuArray{inputtype(x)}, x)
+    return Adapt.adapt_structure(CUDA.CuArray{eltype(inputspace(x))}, x)
 end
 
 

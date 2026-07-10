@@ -117,7 +117,7 @@ end
 
 
 function Adapt.adapt_structure(::Type{A}, x::LinOpDFT) where {A <: AbstractArray}
-    return Adapt.adapt_structure(A{inputtype(x)}, x)
+    return Adapt.adapt_structure(A{eltype(inputspace(x))}, x)
 end
 
 

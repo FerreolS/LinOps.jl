@@ -114,7 +114,7 @@ end
 function Adapt.adapt_structure(to, x::LinOpNFFT)
 
     if eltype(to) === Any
-        T = inputtype(x)
+        T = eltype(inputspace(x))
         tmp = to{T}(undef, 0)
     else
         T = eltype(to)
