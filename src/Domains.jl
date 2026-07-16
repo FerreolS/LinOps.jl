@@ -63,6 +63,8 @@ struct CoordinateSpace{T, N, A} <: AbstractDomain{N}
     end
 end
 
+CoordinateSpace{T, N, A}(sz::NTuple{N, Int}) where {T, N, A} = CoordinateSpace(T, sz, A)
+
 CoordinateSpace() = CoordinateSpace(Number, ())
 CoordinateSpace(sz::Int) = CoordinateSpace(Number, Tuple(sz))
 CoordinateSpace(sz::NTuple{N, Int}) where {N} = CoordinateSpace(Number, sz)
