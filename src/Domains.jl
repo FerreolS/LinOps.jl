@@ -82,7 +82,8 @@ Base.eltype(::CoordinateSpace{T, N}) where {T, N} = isconcretetype(T) ? T : Bool
 @inline get_storage(::Type{CoordinateSpace{T, N, A}}) where {T, N, A} = A
 
 @inline function Base.in(x::AbstractArray{T1, N}, sp::CoordinateSpace{T2, N, A}) where {T1, N, T2, A}
-    return (size(sp) == size(x)) && (x isa A) && ((T1 <: T2) ||  (promote_type(T1, T2) <: T2))
+    storagecheck = x isa SubArray ? (parent(x) isa A) : (x isa A)
+    return (size(sp) == size(x)) && storagecheck && ((T1 <: T2) ||  (promote_type(T1, T2) <: T2))
 end
 
 ⊂(in::CoordinateSpace{T, N, A}, sp::CoordinateSpace{T, N, A}) where {T, N, A} = (size(sp) == size(in))
@@ -111,11 +112,17 @@ Base.similar(t::Type, sp::CoordinateSpace{T, N, <:Union{Array, AbstractArray}}) 
     return similar(Ao{To, N}, size(sp))
 end
 
+@inline function Adapt.adapt_structure(to::Any, x::CoordinateSpace{T, N, A}) where {T, N, A}
+    To = eltype(to)
+    To = isconcretetype(To) ? To : T
+    Ao = parameterless(to)
+    return CoordinateSpace(To, x.size, Ao)
+end
 
 """
     promote_domain(A, B)
 
-Return a domain type able to represent values compatible with domains `A` and `B`.
+Return a domain type able to represent values compatible with domaiqns `A` and `B`.
 """
 promote_domain(::Type{<:AbstractDomain{N}}, ::Type{<:AbstractDomain{N}}) where {N} = CoordinateSpace{Number, N, AbstractArray}
 promote_domain(::Type{CoordinateSpace{T1, N, AbstractArray}}, ::Type{CoordinateSpace{T2, N, AbstractArray}}) where {T1, N, T2} = CoordinateSpace{promote_type(T1, T2), N, AbstractArray}
