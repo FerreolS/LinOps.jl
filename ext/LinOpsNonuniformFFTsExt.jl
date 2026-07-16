@@ -11,6 +11,7 @@ import NonuniformFFTs: PlanNUFFT, exec_type1!, exec_type2!, set_points!
 using Adapt
 using KernelAbstractions
 using LinOps
+using LinOps: inputspace
 using NonuniformFFTs
 using TypeUtils
 
