@@ -8,6 +8,6 @@ using CUDA
 using LinOps: CoordinateSpace
 
 Base.rand(sp::CoordinateSpace{T, N, S}) where {T, N, S <: CuArray} = CUDA.rand(T, size(sp)...)
-Base.randn(sp::TypedCoordinateSpace{T, N, S}) where {T, N, S <: CuArray} = CUDA.randn(T, size(sp))
+Base.randn(sp::CoordinateSpace{T, N, S}) where {T, N, S <: CuArray} = CUDA.randn(T, size(sp))
 
 end
