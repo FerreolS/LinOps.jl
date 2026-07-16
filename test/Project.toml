@@ -19,4 +19,5 @@ LinOps = {path = ".."}
 
 [compat]
 Aqua = "0.8.16"
+FixedSizeArrays = "1.3.0"
 TOML = "1.0.3"
