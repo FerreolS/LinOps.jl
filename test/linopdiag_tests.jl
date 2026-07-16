@@ -1,7 +1,7 @@
 using LinearAlgebra: I, UniformScaling, mul!
 using FixedSizeArrays: FixedSizeArrayDefault
 using Adapt: adapt
-using LinOps: LinOp, LinOpDiag, CoordinateSpace, inputspace, outputspace, inputsize, outputsize, isendomorphism
+using LinOps: LinOp, LinOpDiag, CoordinateSpace, inputspace, outputspace, inputsize, outputsize, isendomorphism, ⊂
 
 @testset "LinOpDiag - Basic LinOp properties" begin
     d = [2.0 3.0; 4.0 5.0]
@@ -33,8 +33,8 @@ end
     @test B isa LinOpDiag
     @test B.diag == D
     @test B.diag isa typeof(D)
-    @test inputspace(B) == inputspace(A)
-    @test inputspace(B) == CoordinateSpace((2,))
+    @test inputspace(B) ⊂ inputspace(A)
+    @test inputsize(B) == (2,)
 end
 
 @testset "LinOpDiag - Apply via * and call" begin

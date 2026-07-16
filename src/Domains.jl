@@ -116,7 +116,7 @@ end
 
 @inline function Adapt.adapt_structure(to::Any, x::CoordinateSpace{T, N, A}) where {T, N, A}
     To = eltype(to)
-    To = isconcretetype(To) ? To : T
+    To = isconcretetype(To) ? adapt_precision(To, T) : T
     Ao = parameterless(to)
     return CoordinateSpace(To, x.size, Ao)
 end

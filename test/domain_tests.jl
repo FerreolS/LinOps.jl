@@ -268,7 +268,7 @@ end
 
     cs_complex = CoordinateSpace(ComplexF64, (3,))
     cs_adapted = @inferred adapt(Array{Float32}, cs_complex)
-    @test cs_adapted === cs_complex
+    @test cs_adapted === CoordinateSpace{ComplexF32, 1, Array}((3,))
 
     @test @inferred(LinOps.promote_domain(typeof(cs_complex), typeof(cs1))) == CoordinateSpace{ComplexF64, 1, AbstractArray}
 end
