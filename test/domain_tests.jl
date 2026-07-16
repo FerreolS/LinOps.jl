@@ -267,7 +267,7 @@ end
     @test eltype(sim) == Float32
 
     cs_complex = CoordinateSpace(ComplexF64, (3,))
-    cs_adapted = @inferred adapt(Array{Float32}, cs_complex)
+    cs_adapted = adapt(Array{Float32}, cs_complex) #@inferred fails for lts julia
     @test cs_adapted === CoordinateSpace{ComplexF32, 1, Array}((3,))
 
     @test @inferred(LinOps.promote_domain(typeof(cs_complex), typeof(cs1))) == CoordinateSpace{ComplexF64, 1, AbstractArray}
