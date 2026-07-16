@@ -37,11 +37,12 @@ function LinOpNFFT(
     end
 
     backend = get_backend(points[1])
+    storage = parameterless(eltype(points))
 
     if dims isa Colon
         plan_nufft = PlanNUFFT(T, sz; backend = backend, kwargs...)
-        outputspace = CoordinateSpace(Complex{T1}, size(plan_nufft), Array)
-        inputspace = CoordinateSpace(T, (length(points[1]),), Array)
+        outputspace = CoordinateSpace(Complex{T1}, size(plan_nufft), storage)
+        inputspace = CoordinateSpace(T, (length(points[1]),), storage)
     else
         dims = _dims2tuple(dims)
         ndd = length(dims)
@@ -51,8 +52,8 @@ function LinOpNFFT(
         else
             throw(ArgumentError("Unsupported dims argument: $dims, only Colon or first dimensions supported"))
         end
-        outputspace = CoordinateSpace(Complex{T1}, tuple(size(plan_nufft)..., sz[(ndd + 1):end]...), Array)
-        inputspace = CoordinateSpace(T, (length(points[1]), sz[(ndd + 1):end]...), Array)
+        outputspace = CoordinateSpace(Complex{T1}, tuple(size(plan_nufft)..., sz[(ndd + 1):end]...), storage)
+        inputspace = CoordinateSpace(T, (length(points[1]), sz[(ndd + 1):end]...), storage)
     end
     set_points!(plan_nufft, points)
 
