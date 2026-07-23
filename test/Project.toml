@@ -20,5 +20,6 @@ LinOps = {path = ".."}
 [compat]
 Adapt = "4.7.0"
 Aqua = "0.8.16"
+FFTW = "1.10.0"
 FixedSizeArrays = "1.3.0"
 TOML = "1.0.3"
