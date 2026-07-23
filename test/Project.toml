@@ -21,5 +21,6 @@ LinOps = {path = ".."}
 Adapt = "4.7.0"
 Aqua = "0.8.16"
 FixedSizeArrays = "1.3.0"
+GPUArrays = "11.5.8"
 TOML = "1.0.3"
 Zygote = "0.7.12"
