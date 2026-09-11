@@ -3,6 +3,7 @@
 *.jl.mem
 *.rej
 .DS_Store
+.claude/freshen-package-status
 .benchmarkci
 Manifest.toml
 benchmark/*.json
