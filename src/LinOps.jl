@@ -18,6 +18,7 @@ using AbstractFFTs,
     ChainRulesCore,
     KernelAbstractions,
     LinearAlgebra,
+    SparseArrays,
     StaticArrays,
     TypeUtils
 
@@ -37,6 +38,7 @@ export I,
     LinOpDFT,
     LinOpDiag,
     LinOpGrad,
+    LinOpSparse,
     LinOpMapslice,
     LinOpNFFT,
     UniformScaling,
@@ -59,5 +61,6 @@ include("LinOpDiag.jl")
 include("LinOpGrad.jl")
 include("LinOpDFT.jl")
 include("LinOpMapslice.jl")
+include("LinOpSparse.jl")
 
 end
