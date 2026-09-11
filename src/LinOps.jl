@@ -12,20 +12,17 @@ subtyping `LinOp` and implementing `apply_` / `apply_!` and adjoint variants.
 """
 module LinOps
 
-using AbstractFFTs,
-    Adapt,
-    ArrayTools,
-    ChainRulesCore,
-    KernelAbstractions,
-    LinearAlgebra,
-    SparseArrays,
-    StaticArrays,
-    TypeUtils
-
-import LinearAlgebra:
-    mul!,
-    I,
-    UniformScaling
+import Adapt
+using Adapt: adapt
+using ArrayTools: colons
+import ChainRulesCore
+using ChainRulesCore: NoTangent, unthunk
+import KernelAbstractions
+using KernelAbstractions: @index, @kernel, get_backend, synchronize
+using LinearAlgebra: I, UniformScaling, diag, dot
+import LinearAlgebra: mul!
+using StaticArrays: SVector
+using TypeUtils: adapt_precision, parameterless
 
 @doc "Identity operator from `LinearAlgebra` used in LinOps operator algebra." I
 @doc "Uniform-scaling operator type from `LinearAlgebra` used in LinOps compositions and sums." UniformScaling

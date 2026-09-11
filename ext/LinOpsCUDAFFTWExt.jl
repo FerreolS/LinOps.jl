@@ -5,12 +5,10 @@ This module provides CUDA-specific `Adapt.adapt_structure` methods so `LinOpDFT`
 instances can be moved to GPU arrays and use CUDA FFT plans.
 """
 module LinOpsCUDAFFTWExt
-using FFTW
-using CUDA
+using FFTW: plan_rfft, plan_brfft, plan_fft, plan_bfft
+using CUDA: CuArray
 import Adapt
-import Adapt.adapt_structure
-using LinOps #: LinOpDFT, inputsize, outputsize, outputtype,AbstractDomain
-using LinOps: CoordinateSpace, AbstractDomain, inputspace
+using LinOps: LinOpDFT, CoordinateSpace, AbstractDomain, inputspace, inputsize
 
 
 """
@@ -18,8 +16,8 @@ using LinOps: CoordinateSpace, AbstractDomain, inputspace
 
 Adapt a `LinOpDFT` to a CUDA array backend using the operator input scalar type.
 """
-function Adapt.adapt_structure(::Type{CUDA.CuArray}, x::LinOpDFT)
-    return Adapt.adapt_structure(CUDA.CuArray{eltype(inputspace(x))}, x)
+function Adapt.adapt_structure(::Type{CuArray}, x::LinOpDFT)
+    return Adapt.adapt_structure(CuArray{eltype(inputspace(x))}, x)
 end
 
 
@@ -28,19 +26,19 @@ end
 
 Adapt a `LinOpDFT` to CUDA with element type `T`, rebuilding compatible FFT plans.
 """
-function Adapt.adapt_structure(::Type{CUDA.CuArray{T}}, x::LinOpDFT) where {T}
+function Adapt.adapt_structure(::Type{CuArray{T}}, x::LinOpDFT) where {T}
     input_sz = inputsize(x)
 
     if T <: Union{Float32, Float64}
         forward = plan_rfft(
-            CUDA.CuArray{T}(undef, input_sz),
+            CuArray{T}(undef, input_sz),
             x.dims
         )
 
-        backward = plan_brfft(CUDA.CuArray{Complex{T}}(undef, forward.output_size), input_sz[1], x.dims)
+        backward = plan_brfft(CuArray{Complex{T}}(undef, forward.output_size), input_sz[1], x.dims)
         outputspace = CoordinateSpace(Complex{T}, forward.output_size, CuArray)
     else
-        temp = CUDA.CuArray{T}(undef, input_sz)
+        temp = CuArray{T}(undef, input_sz)
         forward = plan_fft(temp, x.dims)
         backward = plan_bfft(temp, x.dims)
         outputspace = CoordinateSpace(T, forward.output_size, CuArray)

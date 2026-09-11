@@ -6,12 +6,10 @@ constructors and array adaptation methods.
 """
 module LinOpsFFTWExt
 import Adapt
-import Adapt: adapt_structure
 import FFTW
 import FFTW: fftwComplex, fftwReal, fftwNumber, plan_brfft, plan_rfft, plan_fft, plan_bfft
 import LinOps
-import LinOps: CoordinateSpace, LinOpDFT, apply_!, apply_adjoint_!, inputsize, outputsize,
-    outputtype, LinOpAdjoint
+using LinOps: CoordinateSpace, LinOpDFT, inputsize, outputsize
 
 LinOps.has_operator(::Val{:dft}) = true
 LinOps.operator_backend(::Val{:dft}) = :fftw
@@ -29,7 +27,7 @@ const PLANNING = (
 Create an FFTW-backed real-to-complex DFT operator for array shape `sz`.
 """
 # Real-to-complex FFT.
-function LinOpDFT(
+function LinOps.LinOpDFT(
         ::Type{T},
         sz::NTuple{N, Int};
         dims = 1:N,
@@ -71,7 +69,7 @@ end
 Create an FFTW-backed complex-to-complex DFT operator for array shape `sz`.
 """
 # Complex-to-complex FFT.
-function LinOpDFT(
+function LinOps.LinOpDFT(
         ::Type{T},
         sz::NTuple{N, Int};
         dims = 1:N,
@@ -106,10 +104,10 @@ function LinOpDFT(
     return LinOpDFT(inputspace, outputspace, dims, forward, backward)
 end
 
-LinOpDFT(sz::NTuple; kwargs...) = LinOpDFT(ComplexF64, sz; kwargs...)
+LinOps.LinOpDFT(sz::NTuple; kwargs...) = LinOps.LinOpDFT(ComplexF64, sz; kwargs...)
 
-apply_!(y, A::LinOpDFT, x) = FFTW.mul!(y, A.forward, complex(x))
-apply_adjoint_!(y, A::LinOpDFT, x) = FFTW.mul!(y, A.backward, complex(x))
+LinOps.apply_!(y, A::LinOpDFT, x) = FFTW.mul!(y, A.forward, complex(x))
+LinOps.apply_adjoint_!(y, A::LinOpDFT, x) = FFTW.mul!(y, A.backward, complex(x))
 
 function Base.summary(A::LinOpDFT{I, O, <:FFTW.FFTWPlan{T}}) where {I, O, T}
     return "LinOpDFT ($T) $(inputsize(A)) -> $(outputsize(A))"

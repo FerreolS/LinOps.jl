@@ -109,7 +109,7 @@ end
 Base.inv(A::LinOpCompose) = Base.inv(A.right) * Base.inv(A.left)
 
 ## Inverse
-Base.:^(A::LinOp, n::Int) = n > 0 ? A^(n - 1) * A : (n == 0 ? LinearAlgebra.I : Base.inv(A)^(-n))
+Base.:^(A::LinOp, n::Int) = n > 0 ? A^(n - 1) * A : (n == 0 ? I : Base.inv(A)^(-n))
 
 
 function Base.:/(A::Union{LinOp, Number, UniformScaling}, B::LinOp)
@@ -118,7 +118,7 @@ end
 
 function Base.:/(A::LinOp, B::LinOp)
     if A === B
-        return LinearAlgebra.I
+        return I
     end
     return A * inv(B)
 end
@@ -137,7 +137,7 @@ end
 
 function Base.:\(A::LinOp, B::LinOp)
     if A === B
-        return LinearAlgebra.I
+        return I
     end
     return inv(A) * B
 end

@@ -231,7 +231,7 @@ end =#
 function Adapt.adapt_structure(to, A::T) where {T <: LinOp}
     vals = map(fieldnames(T)) do f
         v = getfield(A, f)
-        Adapt.adapt(to, v)
+        adapt(to, v)
     end
     W = Base.typename(T).wrapper
     return W(vals...)
@@ -247,7 +247,7 @@ function ChainRulesCore.rrule(::typeof(Base.:*), A::LinOp, v)
         applicable(apply_adjoint_!, AbstractArray, A, v)
     function ∂Y(Δy)
         Δv = if has_adjoint
-            adjoint(A) * ChainRulesCore.unthunk(Δy)
+            adjoint(A) * unthunk(Δy)
         else
             apply_adjoint_via_ad(A, Δy)
         end

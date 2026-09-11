@@ -1,5 +1,6 @@
 using LinOps
 using LinOps: AbstractDomain, CoordinateSpace
+using ExplicitImports
 
 using FFTW
 using NonuniformFFTs
@@ -30,5 +31,10 @@ using Test
         include("linopautodiff_tests.jl")
     catch e
         @warn "Skipping Zygote autodiff tests" exception = e
+    end
+
+    @testset "ExplicitImports" begin
+        @test ExplicitImports.check_no_implicit_imports(LinOps) === nothing
+        @test ExplicitImports.check_no_stale_explicit_imports(LinOps) === nothing
     end
 end
