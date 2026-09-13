@@ -80,6 +80,12 @@ function LinOpCompose(A::UniformScaling, B::LinOpCompose{I, O, <:UniformScaling}
     return C * B.right
 end
 
+"""
+    LinOpAdjoint(A::LinOpCompose)
+
+Construct the adjoint of a composition by reversing the operator order:
+`adjoint(A * B) == adjoint(B) * adjoint(A)`.
+"""
 LinOpAdjoint(A::LinOpCompose) = A.right' * A.left'
 
 function apply_(A::LinOpCompose, x)

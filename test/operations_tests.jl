@@ -141,6 +141,24 @@ end
     @test @inferred((B^2) * x) == [9.0, 18.0, 27.0]
 end
 
+@testset "Adjoint reverses composition order" begin
+    A = ScaleOp(CoordinateSpace((3,)), CoordinateSpace((3,)), 2.0)
+    B = ScaleOp(CoordinateSpace((3,)), CoordinateSpace((3,)), 3.0)
+    C = ScaleOp(CoordinateSpace((3,)), CoordinateSpace((3,)), 5.0)
+    x = [1.0, 2.0, 3.0]
+
+    AB = A * B
+    ABC = AB * C
+    mixed = A * (UniformScaling(2.0) * B)
+
+    @test AB' == B' * A'
+    @test ABC' == C' * B' * A'
+    @test mixed' == (UniformScaling(2.0) * B') * A'
+    @test AB' * x == B' * (A' * x)
+    @test ABC' * x == C' * (B' * (A' * x))
+    @test mixed' * x == 2.0 .* (B' * (A' * x))
+end
+
 @testset "Operations - LinOpSum and mixed divide/solve overloads" begin
     A = LinOpDiag([2.0, 3.0, 4.0])
     B = LinOpDiag([5.0, 6.0, 7.0])
