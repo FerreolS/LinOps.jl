@@ -4,10 +4,16 @@ struct LinOpSparse{I, O, S <: AbstractMatrix} <: LinOp{I, O}
     sparse_matrix::S
 end
 
-function LinOpSparse(matrix, sizein, sizeout)
-    size(matrix, 1) == prod(sizeout) || throw(DimensionMismatch("Matrix row size does not match output size"))
-    size(matrix, 2) == prod(sizein) || throw(DimensionMismatch("Matrix column size does not match input size"))
-    return LinOpSparse(LinOps.CoordinateSpace(sizein), LinOps.CoordinateSpace(sizeout), matrix)
+"""
+    LinOpSparse(matrix, inputsz, outputsz)
+
+Construct a sparse-matrix-backed linear operator with the given input and output
+space sizes.
+"""
+function LinOpSparse(matrix, inputsz, outputsz)
+    size(matrix, 1) == prod(outputsz) || throw(DimensionMismatch("Matrix row size does not match output size"))
+    size(matrix, 2) == prod(inputsz) || throw(DimensionMismatch("Matrix column size does not match input size"))
+    return LinOpSparse(LinOps.CoordinateSpace(inputsz), LinOps.CoordinateSpace(outputsz), matrix)
 end
 
 Base.eltype(A::LinOpSparse) = eltype(A.sparse_matrix)

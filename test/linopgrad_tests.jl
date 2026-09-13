@@ -2,6 +2,16 @@ using Test
 using LinearAlgebra: mul!
 using LinOps: LinOp, LinOpGrad, CoordinateSpace, inputsize, outputsize, inputspace, outputspace
 
+@testset "LinOpGrad - public constructor cascade" begin
+    space = CoordinateSpace((5, 4))
+    from_space = LinOpGrad(space)
+    from_size = LinOpGrad((5, 4))
+
+    @test from_space == from_size
+    @test inputspace(from_space) == space
+    @test outputspace(from_space) == outputspace(from_size)
+end
+
 @testset "LinOpGrad - Basic LinOp properties" begin
     A = LinOpGrad((5, 4))
 
