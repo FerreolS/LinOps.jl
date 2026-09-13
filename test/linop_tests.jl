@@ -68,12 +68,16 @@ end
     @test LinOps.has_operator(:dft) isa Bool
     @test LinOps.has_operator(:nfft) isa Bool
     @test LinOps.has_operator(:something_else) == false
+    @test LinOps.has_operator(Val(:dft)) == LinOps.has_operator(:dft)
+    @test LinOps.has_operator(Val(:something_else)) == false
     @test LinOps.has_operator(LinOps.LinOpDFT) == LinOps.has_operator(:dft)
     @test LinOps.has_operator(LinOps.LinOpNFFT) == LinOps.has_operator(:nfft)
 
     @test LinOps.operator_backend(:dft) isa Symbol
     @test LinOps.operator_backend(:nfft) isa Symbol
     @test LinOps.operator_backend(:something_else) == :none
+    @test LinOps.operator_backend(Val(:dft)) == LinOps.operator_backend(:dft)
+    @test LinOps.operator_backend(Val(:something_else)) == :none
     @test LinOps.operator_backend(LinOps.LinOpDFT) == LinOps.operator_backend(:dft)
     @test LinOps.operator_backend(LinOps.LinOpNFFT) == LinOps.operator_backend(:nfft)
 end

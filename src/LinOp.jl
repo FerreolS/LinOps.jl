@@ -46,6 +46,8 @@ isendomorphism(::UniformScaling) = true
     has_operator(A::LinOp)
 
 Return whether an optional operator family (for example `:dft` or `:nfft`) is available.
+The positional symbol identifies the operator family being queried and is therefore
+part of dispatch, rather than a configuration flag that should be a keyword.
 """
 has_operator(::Val) = false
 has_operator(name::Symbol) = has_operator(Val(name))
@@ -57,6 +59,8 @@ has_operator(name::Symbol) = has_operator(Val(name))
     operator_backend(A::LinOp)
 
 Return the active backend for an optional operator family, or `:none`.
+The positional symbol identifies the operator family being queried and is therefore
+part of dispatch, rather than a configuration flag that should be a keyword.
 """
 operator_backend(::Val) = :none
 operator_backend(name::Symbol) = operator_backend(Val(name))
