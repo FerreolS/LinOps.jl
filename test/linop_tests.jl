@@ -111,6 +111,19 @@ end
     @test outputspace(AD) == inputspace(D)
 end
 
+@testset "LinOp equality and hashing" begin
+    A = LinOpDiag([1.0, 2.0, 3.0])
+    B = LinOpDiag([1.0, 2.0, 3.0])
+
+    @test A == B
+    @test isequal(A, B)
+    @test hash(A) == hash(B)
+
+    operators = Dict(A => :diagonal)
+    @test operators[B] == :diagonal
+    @test B in Set([A])
+end
+
 @testset "LinOp - matrix and scaling helper dispatch" begin
     M = [1.0 2.0; 3.0 4.0]
     x = [1.0, -1.0]

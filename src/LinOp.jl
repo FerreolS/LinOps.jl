@@ -103,6 +103,11 @@ function Base.:(==)(a::LinOp, b::LinOp)
     return all(getfield(a, f) == getfield(b, f) for f in fieldnames(typeof(b)))
 end
 
+function Base.hash(A::LinOp, h::UInt)
+    h = hash(typeof(A), h)
+    return foldl((seed, field) -> hash(getfield(A, field), seed), fieldnames(typeof(A)); init = h)
+end
+
 function Base.summary(A::LinOp)
     T = typeof(A)
     name = nameof(T)
