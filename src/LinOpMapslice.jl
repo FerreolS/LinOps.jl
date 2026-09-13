@@ -24,10 +24,6 @@ struct LinOpMapslice{I, O, P, D} <: LinOp{I, O}
 end
 LinOpMapslice(sz::NTuple, operator; dims) = LinOpMapslice(sz, operator, _dims2tuple(dims))
 
-LinOpMapslice(sz::NTuple, operator, dims::Integer) = LinOpMapslice(sz, operator; dims)
-LinOpMapslice(sz::NTuple, operator, dims::NTuple{N, <:Integer}) where {N} = LinOpMapslice(sz, operator; dims)
-LinOpMapslice(sz::NTuple, operator, dims::AbstractVector{<:Integer}) = LinOpMapslice(sz, operator; dims)
-
 function _validate_mapslice_dims(sz::NTuple, dims::NTuple{N, Int}) where {N}
     N > 0 || throw(ArgumentError("At least one dimension must be selected"))
     all(dim -> dim > 0, dims) || throw(ArgumentError("Selected dimensions must be positive"))

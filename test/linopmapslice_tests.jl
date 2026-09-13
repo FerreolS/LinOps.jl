@@ -124,11 +124,11 @@ end
 end
 
 @testset "LinOpMapslice - argument checks" begin
-    @test_throws ArgumentError LinOpMapslice((2, 5, 3), LinOpDiag(randn(4)), [2])
-    @test_throws ArgumentError LinOpMapslice((2, 5, 3), LinOpDiag(randn(5)), [4])
+    @test_throws ArgumentError LinOpMapslice((2, 5, 3), LinOpDiag(randn(4)); dims = [2])
+    @test_throws ArgumentError LinOpMapslice((2, 5, 3), LinOpDiag(randn(5)); dims = [4])
 
     ops = [LinOpDiag(randn(5)) for _ in 1:2, _ in 1:2]
-    @test_throws ArgumentError LinOpMapslice((2, 5, 3), ops, [2])
+    @test_throws ArgumentError LinOpMapslice((2, 5, 3), ops; dims = [2])
 end
 
 @testset "LinOpMapslice - keyword dims and normalization" begin
@@ -136,14 +136,13 @@ end
     D = LinOpDiag(randn(5))
     x = randn(sz...)
 
-    M_positional = LinOpMapslice(sz, D, 2)
     M_keyword = LinOpMapslice(sz, D; dims = 2)
     M_tuple = LinOpMapslice(sz, D; dims = (2,))
     M_vector = LinOpMapslice(sz, D; dims = [2])
 
-    @test M_keyword * x ≈ M_positional * x
-    @test M_tuple * x ≈ M_positional * x
-    @test M_vector * x ≈ M_positional * x
+    @test_throws MethodError LinOpMapslice(sz, D, 2)
+    @test M_tuple * x ≈ M_keyword * x
+    @test M_vector * x ≈ M_keyword * x
 
     scalars = randn(sz[3])
     x2 = randn(sz...)
