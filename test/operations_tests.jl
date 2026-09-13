@@ -29,6 +29,11 @@ apply_!(y, A::ScaleOp, x) = (@. y = A.a * x)
 apply_adjoint_(A::ScaleOp, x) = A.a .* x
 apply_adjoint_!(y, A::ScaleOp, x) = (@. y = A.a * x)
 
+@testset "Internal composition types are not exported" begin
+    @test :LinOpCompose ∉ names(LinOps)
+    @test :LinOpSum ∉ names(LinOps)
+end
+
 @testset "Operations - LinOpCompose domain promotion branches" begin
     left_typed = ScaleOp(CoordinateSpace(Float32, (3,)), CoordinateSpace((3,)), 2.0)
     right_coord = ScaleOp(CoordinateSpace((3,)), CoordinateSpace((3,)), 3.0)
