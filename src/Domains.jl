@@ -47,7 +47,7 @@ Base.similar(A::AbstractArray, ::Type{T}, sp::AbstractDomain) where {T} = simila
 Adapt.adapt_structure(::Any, x::AbstractDomain) = x
 
 """
-    CoordinateSpace
+    CoordinateSpace([T,] sz)
 
 Shape-only domain descriptor.
 
@@ -124,7 +124,7 @@ end
 """
     promote_domain(A, B)
 
-Return a domain type able to represent values compatible with domaiqns `A` and `B`.
+Return a domain type able to represent values compatible with domains `A` and `B`.
 """
 promote_domain(::Type{<:AbstractDomain{N}}, ::Type{<:AbstractDomain{N}}) where {N} = CoordinateSpace{Number, N, AbstractArray}
 promote_domain(::Type{CoordinateSpace{T1, N, AbstractArray}}, ::Type{CoordinateSpace{T2, N, AbstractArray}}) where {T1, N, T2} = CoordinateSpace{promote_type(T1, T2), N, AbstractArray}

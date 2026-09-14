@@ -28,6 +28,15 @@ end
 
 NoApplyOp(n::Int) = NoApplyOp(CoordinateSpace((n,)), CoordinateSpace((n,)))
 
+@testset "LinOp - view indexing" begin
+    A = LinOpDiag([1.0, 2.0, 3.0])
+    source = [10.0, 20.0, 30.0, 40.0, 50.0]
+    x = source[2:4]
+    x_view = @view source[2:4]
+
+    @test A * x_view == A * x
+end
+
 @testset "LinOp - generic mul! fallback via apply_" begin
     A = ApplyOnlyOp(3)
     x = [1.0, 2.0, 3.0]

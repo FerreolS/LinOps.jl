@@ -8,6 +8,13 @@ Base.:∘(A, B::LinOp) = LinOpCompose(A, B)
 Base.:∘(A::LinOp, B::LinOp) = LinOpCompose(A, B)
 
 
+"""
+    LinOpCompose(A, B)
+
+Composite linear operator that applies `B` followed by `A`.
+
+Use `A * B` or `A ∘ B` to construct compositions in ordinary code.
+"""
 struct LinOpCompose{I, O, L <: Union{UniformScaling, LinOp}, R <: LinOp} <: LinOp{I, O}
     inputspace::I
     outputspace::O
@@ -152,6 +159,13 @@ end
 Base.:+(A::Union{LinOp, Number, UniformScaling}, B::LinOp) = LinOpSum(A, B)
 Base.:+(A::LinOp, B::Union{UniformScaling, Number}) = B + A
 
+"""
+    LinOpSum(A, B)
+
+Sum of two linear operators with matching input and output spaces.
+
+Use `A + B` to construct sums in ordinary code.
+"""
 struct LinOpSum{I, O, L <: Union{UniformScaling, LinOp}, R <: LinOp} <: LinOp{I, O}
     inputspace::I
     outputspace::O
