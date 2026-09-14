@@ -21,6 +21,7 @@ import KernelAbstractions
 using KernelAbstractions: @index, @kernel, get_backend, synchronize
 using LinearAlgebra: I, UniformScaling, diag, dot
 import LinearAlgebra: mul!
+using SparseArrays: AbstractSparseMatrix
 using StaticArrays: SVector
 using TypeUtils: adapt_precision, parameterless
 

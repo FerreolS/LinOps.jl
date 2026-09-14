@@ -6,7 +6,7 @@ Linear operator backed by a matrix `S`, mapping domain `I` to domain `O`.
 Construct instances with [`LinOpSparse`](@ref), which validates the matrix
 dimensions and creates coordinate-space domains.
 """
-struct LinOpSparse{I, O, S <: AbstractMatrix} <: LinOp{I, O}
+struct LinOpSparse{I, O, S <: AbstractSparseMatrix} <: LinOp{I, O}
     inputspace::I
     outputspace::O
     sparse_matrix::S
