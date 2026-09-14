@@ -1,5 +1,5 @@
 using LinearAlgebra: I, UniformScaling, mul!
-using LinOps: LinOp, LinOpDiag, CoordinateSpace, inputsize, outputsize, inputspace, outputspace
+using LinOps: LinOp, LinOpDiag, CoordinateSpace, inputsize, outputsize, inputspace, outputspace, verify_adjoint
 import LinOps: apply_, apply_adjoint_
 
 struct ApplyOnlyOp <: LinOp{CoordinateSpace{Number, 1, AbstractArray}, CoordinateSpace{Number, 1, AbstractArray}}
@@ -143,7 +143,13 @@ end
 
     @test inputspace(M) == CoordinateSpace((2,))
     @test outputspace(M) == CoordinateSpace((2,))
+    @test @inferred(LinOps.outputtype(M, x)) == Float64
+    @test @inferred(LinOps.outputtype(UniformScaling(2), x)) == Float64
 
+end
+
+@testset "LinOp - adjoint verification utility" begin
+    @test verify_adjoint(LinOpDiag([1.0, 2.0, 3.0]))
 end
 
 @testset "LinOp - error messages and adjoint forwarding methods" begin

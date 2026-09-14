@@ -26,6 +26,14 @@ using LinOps: LinOpDFT, LinOpDiag, LinOp, CoordinateSpace, inputspace, outputspa
     # adjoint identity does NOT hold for rfft/brfft (half-spectrum issue)
 end
 
+@testset "LinOpDFT - default constructor" begin
+    F = LinOpDFT((8,))
+    x = randn(ComplexF64, 8)
+
+    @test F isa LinOp
+    @test F * x ≈ fft(x)
+end
+
 @testset "LinOpDFT - Real to complex 2D" begin
     M, N = 8, 12
     F = LinOpDFT(Float64, (M, N))

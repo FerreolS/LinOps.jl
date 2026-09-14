@@ -200,6 +200,13 @@ end
     @test_throws "output spaces of the two operators should match" A + B_bad_out
 end
 
+@testset "Operations - LinOpCompose constructor message checks" begin
+    A = LinOpDiag([2.0, 3.0, 4.0])
+    B = ScaleOp(CoordinateSpace((2,)), CoordinateSpace((2,)), 1.0)
+
+    @test_throws "output space of the right operator should match the input space of the left operator" A * B
+end
+
 @testset "Operations - LinOpSum generic apply branches" begin
     A = ScaleOp(CoordinateSpace((3,)), CoordinateSpace((3,)), 2.0)
     B = ScaleOp(CoordinateSpace((3,)), CoordinateSpace((3,)), 3.0)

@@ -272,3 +272,19 @@ end
 
     @test @inferred(LinOps.promote_domain(typeof(cs_complex), typeof(cs1))) == CoordinateSpace{ComplexF64, 1, AbstractArray}
 end
+
+@testset "Domains - CoordinateSpace validation and utility overloads" begin
+    @test_throws "element type must be a subtype of Number" CoordinateSpace(String, (2,))
+    @test_throws "array type must be a subtype of AbstractArray" CoordinateSpace(Number, (2,), String)
+
+    sp = CoordinateSpace(Int, (2, 3))
+    @test similar(sp) isa Array{Int, 2}
+    @test size(similar(sp)) == (2, 3)
+    @test similar(Array{Float32, 2}, sp) isa Array{Float32, 2}
+    @test size(similar(Array{Float32, 2}, sp)) == (2, 3)
+    @test randn(Float32, sp) isa Array{Float32, 2}
+    @test rand(Int, sp) isa Array{Int, 2}
+
+    @test !(zeros(2, 3) in CoordinateSpace(Int, (2, 3)))
+    @test zeros(Int, 2, 3) in CoordinateSpace(Int, (2, 3), Matrix)
+end

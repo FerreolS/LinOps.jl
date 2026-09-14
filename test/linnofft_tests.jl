@@ -114,6 +114,25 @@ end
     @test eltype(r) == Float32
 end
 
+@testset "LinOpNFFT - explicit transform dimensions" begin
+    Random.seed!(11)
+    M, K, npts = 16, 3, 20
+    xpts = Float32.(π .* (2 .* rand(npts) .- 1))
+    NF = LinOpNFFT(Float32, (M, K), (xpts,); dims = (1,))
+
+    @test inputsize(NF) == (npts, K)
+    @test outputsize(NF) == (div(M, 2) + 1, K)
+
+    x = randn(Float32, npts, K)
+    y = NF * x
+    @test size(y) == outputsize(NF)
+    @test eltype(y) == ComplexF32
+
+    y_adj = NF' * y
+    @test size(y_adj) == inputsize(NF)
+    @test eltype(y_adj) == Float32
+end
+
 @testset "LinOpNFFT - Adjoint identity Float32" begin
     # For Float32 NUFFT (real→complex), the adjoint identity in ℂ is:
     #   real(dot(NF*x, y)) ≈ dot(x, real(NF'*y))   (Parseval between ℝ and ℂ)
