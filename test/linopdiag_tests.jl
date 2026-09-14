@@ -219,3 +219,23 @@ end
     R = UniformScaling(1) * A
     @test R === A
 end
+
+@testset "LinOpDiag - scalar and mismatch branches" begin
+    A = LinOpDiag([2.0, 3.0, 4.0])
+    B = LinOpDiag([5.0, 6.0])
+
+    @test (0 * A) == UniformScaling(0)
+    @test (1 * A) === A
+    @test (2 * A) * ones(3) == [4.0, 6.0, 8.0]
+    @test (UniformScaling(0) * A) == UniformScaling(0)
+    @test (UniformScaling(1) * A) === A
+    @test (UniformScaling(2) * A) * ones(3) == [4.0, 6.0, 8.0]
+    @test LinOps.LinOpCompose(0, A) == UniformScaling(0)
+    @test LinOps.LinOpCompose(1, A) === A
+    @test LinOps.LinOpCompose(2, A) * ones(3) == [4.0, 6.0, 8.0]
+    @test LinOps.LinOpCompose(UniformScaling(0), A) == UniformScaling(0)
+    @test LinOps.LinOpCompose(UniformScaling(1), A) === A
+    @test LinOps.LinOpCompose(UniformScaling(2), A) * ones(3) == [4.0, 6.0, 8.0]
+    @test_throws "output space of the right operator should match" A * B
+    @test_throws "input space of operators should match" A + B
+end

@@ -193,6 +193,8 @@ end
     @test occursin("LinOpDFT", sc)
     @test sprint(show, Fc) == sc
     @test occursin("LinOpDFT", sr)
+    @test Base.summary(Fc) == sc
+    @test Base.summary(Fr) == sr
     @test sprint(show, Fr) == sr
 end
 
@@ -208,6 +210,14 @@ end
     @test inputsize(Ac) == inputsize(Fc)
     @test outputsize(Ac) == outputsize(Fc)
     @test outputtype(Ac, rand(ComplexF32, inputsize(Ac)...)) == ComplexF32
+
+    Ar_direct = Adapt.adapt(Array{Float32}, Fr)
+    @test inputsize(Ar_direct) == inputsize(Fr)
+    @test outputsize(Ar_direct) == outputsize(Fr)
+
+    Ac_direct = Adapt.adapt(Array{ComplexF32}, Fc)
+    @test inputsize(Ac_direct) == inputsize(Fc)
+    @test outputsize(Ac_direct) == outputsize(Fc)
 end
 
 @testset "LinOpDFT - FFTW extension flag validation" begin

@@ -1,5 +1,11 @@
 using Adapt: adapt
 
+struct GenericDomain <: LinOps.AbstractDomain{2}
+    size::NTuple{2, Int}
+end
+
+abstract type DomainStorage{T, N} <: AbstractArray{T, N} end
+
 @testset "Domains - CoordinateSpace Construction" begin
     # Single dimension
     sp1 = CoordinateSpace(10)
@@ -287,4 +293,37 @@ end
 
     @test !(zeros(2, 3) in CoordinateSpace(Int, (2, 3)))
     @test zeros(Int, 2, 3) in CoordinateSpace(Int, (2, 3), Matrix)
+end
+
+@testset "Domains - generic AbstractDomain API" begin
+    sp = GenericDomain((2, 3))
+    other = GenericDomain((2, 3))
+    different = GenericDomain((3, 2))
+
+    @test eltype(GenericDomain) == Bool
+    @test eltype(sp) == Bool
+    @test !(zeros(2, 3) in sp)
+    @test Base.in(zeros(2, 3), sp) === false
+    @test LinOps.:(⊂)(sp, other)
+    @test !LinOps.:(⊂)(sp, different)
+    @test zeros(sp) == zeros(2, 3)
+    @test ones(Int, sp) == ones(Int, 2, 3)
+    @test size(rand(sp)) == (2, 3)
+    @test size(randn(Float32, sp)) == (2, 3)
+    @test size(similar(zeros(2, 3), sp)) == (2, 3)
+    @test size(similar(zeros(2, 3), Float32, sp)) == (2, 3)
+    @test LinOps.Adapt.adapt_structure(Array, sp) === sp
+
+    @test LinOps.promote_domain(GenericDomain, GenericDomain) == CoordinateSpace{Number, 2, AbstractArray}
+    int_array = CoordinateSpace{Int, 2, Array}((2, 3))
+    float_array = CoordinateSpace{Float64, 2, Array}((2, 3))
+    int_abstract = CoordinateSpace{Int, 2, AbstractArray}((2, 3))
+    float_abstract = CoordinateSpace{Float64, 2, AbstractArray}((2, 3))
+    int_storage = CoordinateSpace{Int, 2, DomainStorage}((2, 3))
+    float_storage = CoordinateSpace{Float64, 2, DomainStorage}((2, 3))
+    @test LinOps.:(⊂)(int_array, float_array)
+    @test LinOps.promote_domain(typeof(int_storage), typeof(float_abstract)) == CoordinateSpace{Float64, 2, DomainStorage}
+    @test LinOps.promote_domain(typeof(int_abstract), typeof(float_storage)) == CoordinateSpace{Float64, 2, DomainStorage}
+    @test eltype(CoordinateSpace{Number, 2, AbstractArray}) == Bool
+    @test eltype(CoordinateSpace{Number, 2, AbstractArray}((2, 3))) == Bool
 end
