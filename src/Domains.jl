@@ -43,7 +43,7 @@ Base.rand(rng::Random.AbstractRNG, X, sp::AbstractDomain) = rand(rng, X, size(sp
 Base.randn(sp::AbstractDomain) = randn(size(sp)...)
 Base.randn(rng::Random.AbstractRNG, sp::AbstractDomain) = randn(rng, size(sp)...)
 Base.randn(::Type{T}, sp::AbstractDomain) where {T} = randn(T, size(sp)...)
-Base.randn(rng::Random.AbstractRNG, ::Type{T}, sp::AbstractDomain) where {T} = randn(rng, T, size(sp)...)
+Base.randn(rng::Random.AbstractRNG, X, sp::AbstractDomain) = randn(rng, X, size(sp)...)
 
 
 Base.zeros(::Type{T}, sp::AbstractDomain) where {T} = zeros(T, size(sp))
