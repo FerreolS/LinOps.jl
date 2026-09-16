@@ -10,9 +10,9 @@ abstract type LinOp{I <: AbstractDomain, O <: AbstractDomain} end
 Base.eltype(::LinOp) = Bool
 
 """Return the input domain of operator `A`."""
-inputspace(A::LinOp) = A.inputspace
+inputspace(A::LinOp{I, O}) where {I, O} = A.inputspace::I
 """Return the output domain of operator `A`."""
-outputspace(A::LinOp) = A.outputspace
+outputspace(A::LinOp{I, O}) where {I, O} = A.outputspace::O
 
 outputspace(A::AbstractMatrix) = CoordinateSpace(size(A, 1))
 inputspace(A::AbstractMatrix) = CoordinateSpace(size(A, 2))
