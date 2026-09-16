@@ -1,4 +1,5 @@
 using Adapt: adapt
+using Random: MersenneTwister
 
 struct GenericDomain <: LinOps.AbstractDomain{2}
     size::NTuple{2, Int}
@@ -123,7 +124,7 @@ end
 end
 
 @testset "Domains - Array Creation Methods" begin
-    sp = CoordinateSpace((2, 3))
+    sp = CoordinateSpace(Float64, (2, 3))
 
     # zeros
     z = zeros(sp)
@@ -156,15 +157,44 @@ end
     @test size(rn_float32) == (2, 3)
     @test eltype(rn_float32) == Float32
 
+    rn_typed = randn(Float64, sp)
+    @test size(rn_typed) == (2, 3)
+    @test eltype(rn_typed) == Float64
+
+    rn_rng = randn(MersenneTwister(42), sp)
+    @test size(rn_rng) == (2, 3)
+    @test eltype(rn_rng) == Float64
+
     # rand (returns tuple when called with tuple argument)
     # So we test with unpacked size instead
     r = rand(sp)
     @test size(r) == (2, 3)
     @test eltype(r) == Float64
 
+    r_values = rand((1, -1), sp)
+    @test size(r_values) == (2, 3)
+    @test eltype(r_values) == Int
+
+    rng = MersenneTwister(42)
+    r_rng = rand(rng, sp)
+    @test size(r_rng) == (2, 3)
+    @test eltype(r_rng) == Float64
+
+    r_rng_values = rand(rng, (1, -1), sp)
+    @test size(r_rng_values) == (2, 3)
+    @test eltype(r_rng_values) == Int
+
+    r_rng_range = rand(rng, 1:2, sp)
+    @test size(r_rng_range) == (2, 3)
+    @test eltype(r_rng_range) == Int
+
     r_int = rand(Int, sp)
     @test size(r_int) == (2, 3)
     @test eltype(r_int) == Int
+
+    r_rng_int = rand(MersenneTwister(42), Int, sp)
+    @test size(r_rng_int) == (2, 3)
+    @test eltype(r_rng_int) == Int
 end
 
 @testset "Domains - Similar" begin
@@ -309,7 +339,13 @@ end
     @test zeros(sp) == zeros(2, 3)
     @test ones(Int, sp) == ones(Int, 2, 3)
     @test size(rand(sp)) == (2, 3)
+    @test size(rand((1, -1), sp)) == (2, 3)
+    @test size(rand(MersenneTwister(42), (1, -1), sp)) == (2, 3)
+    @test size(rand(Int, sp)) == (2, 3)
     @test size(randn(Float32, sp)) == (2, 3)
+    @test size(randn(Float64, sp)) == (2, 3)
+    @test size(randn(MersenneTwister(42), sp)) == (2, 3)
+    @test size(randn(MersenneTwister(42), Float32, sp)) == (2, 3)
     @test size(similar(zeros(2, 3), sp)) == (2, 3)
     @test size(similar(zeros(2, 3), Float32, sp)) == (2, 3)
     @test LinOps.Adapt.adapt_structure(Array, sp) === sp

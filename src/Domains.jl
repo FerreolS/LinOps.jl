@@ -33,13 +33,21 @@ Domain inclusion predicate. Returns `true` when domain `a` is compatible with `b
 
 Base.zeros(sp::AbstractDomain) = zeros(size(sp))
 Base.ones(sp::AbstractDomain) = ones(size(sp))
+
 Base.rand(sp::AbstractDomain) = rand(size(sp)...)
-Base.randn(sp::AbstractDomain) = randn(size(sp))
+Base.rand(rng::Random.AbstractRNG, sp::AbstractDomain) = rand(rng, size(sp))
+Base.rand(X, sp::AbstractDomain) = rand(X, size(sp))
+Base.rand(rng::Random.AbstractRNG, X, sp::AbstractDomain) = rand(rng, X, size(sp))
+
+
+Base.randn(sp::AbstractDomain) = randn(size(sp)...)
+Base.randn(rng::Random.AbstractRNG, sp::AbstractDomain) = randn(rng, size(sp)...)
+Base.randn(::Type{T}, sp::AbstractDomain) where {T} = randn(T, size(sp)...)
+Base.randn(rng::Random.AbstractRNG, ::Type{T}, sp::AbstractDomain) where {T} = randn(rng, T, size(sp)...)
+
 
 Base.zeros(::Type{T}, sp::AbstractDomain) where {T} = zeros(T, size(sp))
 Base.ones(::Type{T}, sp::AbstractDomain) where {T} = ones(T, size(sp))
-Base.rand(::Type{T}, sp::AbstractDomain) where {T} = rand(T, size(sp)...)
-Base.randn(::Type{T}, sp::AbstractDomain) where {T} = randn(T, size(sp))
 
 Base.similar(A::AbstractArray, sp::AbstractDomain) = similar(A, size(sp))
 Base.similar(A::AbstractArray, ::Type{T}, sp::AbstractDomain) where {T} = similar(A, T, size(sp))
@@ -104,8 +112,30 @@ end
     return fill!(Ao{To, N}(undef, size(sp)), one(To))
 end
 
-Base.rand(sp::CoordinateSpace{T, N, <:Union{Array, AbstractArray}}) where {T, N} = isconcretetype(T) ? rand(T, size(sp)) : rand(Float64, size(sp))
-Base.randn(sp::CoordinateSpace{T, N, <:Union{Array, AbstractArray}}) where {T, N} = isconcretetype(T) ? randn(T, size(sp)) : randn(Float64, size(sp))
+@inline function _rand_storage(sp::CoordinateSpace{T, N, A}; rng::Random.AbstractRNG = Random.default_rng(), X = T) where {T, N, A}
+    To0 = isa(X, Type) ? X : eltype(X)
+    To = isconcretetype(To0) ? To0 : Float64
+    Ao = (isconcretetype(A{To, N}) ? A : Array)
+    return Random.rand!(rng, Ao{To, N}(undef, size(sp)), X)
+end
+
+Base.rand(sp::CoordinateSpace) = _rand_storage(sp)
+Base.rand(rng::Random.AbstractRNG, sp::CoordinateSpace) = _rand_storage(sp, rng = rng)
+Base.rand(rng::Random.AbstractRNG, X, sp::CoordinateSpace) = _rand_storage(sp, rng = rng, X = X)
+Base.rand(X, sp::CoordinateSpace) = _rand_storage(sp, X = X)
+
+
+@inline function _randn_storage(sp::CoordinateSpace{T, N, A}; rng::Random.AbstractRNG = Random.default_rng(), X::Type{To0} = T) where {T, N, A, To0}
+    To = isconcretetype(To0) ? To0 : Float64
+    Ao = (isconcretetype(A{To, N}) ? A : Array)
+    return Random.randn!(rng, Ao{To, N}(undef, size(sp)))
+end
+Base.randn(sp::CoordinateSpace) = _randn_storage(sp)
+Base.randn(rng::Random.AbstractRNG, sp::CoordinateSpace) = _randn_storage(sp, rng = rng)
+Base.randn(rng::Random.AbstractRNG, X, sp::CoordinateSpace) = _randn_storage(sp, rng = rng, X = X)
+Base.randn(X::Type, sp::CoordinateSpace) = _randn_storage(sp, X = X)
+
+
 Base.similar(t::Type, sp::CoordinateSpace{T, N, <:Union{Array, AbstractArray}}) where {T, N} = similar(t, size(sp))
 @inline Base.similar(A::AbstractArray, sp::CoordinateSpace{T, N}) where {T, N} = isconcretetype(T) ? similar(A, T, size(sp)) : similar(A, size(sp))
 @inline function Base.similar(sp::CoordinateSpace{T, N, A}) where {T, N, A}
