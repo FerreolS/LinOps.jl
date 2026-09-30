@@ -1,7 +1,46 @@
 using GPUArrays
 using JLArrays
 using LinearAlgebra: mul!
-using LinOps: LinOp, LinOpDiag, LinOpGrad, LinOpMapslice, inputsize, outputsize, CoordinateSpace, inputspace, outputspace
+using LinOps: LinOp, LinOpDiag, LinOpGrad, LinOpMapslice, LinOpSelect, inputsize, outputsize, CoordinateSpace, inputspace, outputspace
+
+@testset "LinOpSelect - repeated indices on GPU" begin
+    A = LinOpSelect((2, 2), [CartesianIndex(2, 1), CartesianIndex(2, 1), CartesianIndex(1, 2)])
+    x = JLArray(Float32[1 3; 2 4])
+    y = JLArray(Float32[5, 7, 11])
+
+    @test Array(A * x) == Float32[2, 2, 3]
+    @test A' * y isa JLArray
+    @test Array(A' * y) == Float32[0 11; 12 0]
+
+    forward = similar(A * x)
+    adjoint_output = similar(x)
+    @test LinOps.apply_!(forward, A, x) === forward
+    @test Array(forward) == Float32[2, 2, 3]
+    @test LinOps.apply_adjoint_!(adjoint_output, A, y) === adjoint_output
+    @test Array(adjoint_output) == Float32[0 11; 12 0]
+
+    mul!(forward, A, x)
+    @test Array(forward) == Float32[2, 2, 3]
+    mul!(adjoint_output, A', y)
+    @test Array(adjoint_output) == Float32[0 11; 12 0]
+
+    @test Array((A' * A) * x) == Float32[0 3; 4 0]
+    @test Array((A * A') * y) == Float32[12, 12, 11]
+
+    y_complex = JLArray(ComplexF32[3 + 2im, 5 - im, 7 + im])
+    @test Array(A' * y_complex) == ComplexF32[0 7 + im; 8 + im 0]
+    complex_adjoint_output = similar(x, ComplexF32)
+    @test LinOps.apply_adjoint_!(complex_adjoint_output, A, y_complex) === complex_adjoint_output
+    @test Array(complex_adjoint_output) == ComplexF32[0 7 + im; 8 + im 0]
+
+    empty_select = LinOpSelect((2, 2), CartesianIndex{2}[])
+    empty_adjoint = adjoint(empty_select) * JLArray(Float32[])
+    @test empty_adjoint isa JLArray
+    @test Array(empty_adjoint) == zeros(Float32, 2, 2)
+
+    y_integer = JLArray(Int16[3, 5, 7])
+    @test Array(adjoint(A) * y_integer) == Int16[0 7; 8 0]
+end
 
 @testset "LinOpDiag - GPU arrays" begin
     @testset "LinOpDiag forward pass on GPU" begin

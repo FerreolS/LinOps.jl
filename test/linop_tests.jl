@@ -1,6 +1,6 @@
 using LinearAlgebra: I, UniformScaling, mul!
-using LinOps: LinOp, LinOpDiag, CoordinateSpace, inputsize, outputsize, inputspace, outputspace, verify_adjoint
-import LinOps: apply_, apply_adjoint_
+using LinOps: LinOp, LinOpDiag, LinOpSelect, CoordinateSpace, inputsize, outputsize, inputspace, outputspace, verify_adjoint
+import LinOps: apply_, apply_!, apply_adjoint_, apply_adjoint_!
 
 struct ApplyOnlyOp <: LinOp{CoordinateSpace{Number, 1, AbstractArray}, CoordinateSpace{Number, 1, AbstractArray}}
     inputspace::CoordinateSpace{Number, 1, AbstractArray}
@@ -35,6 +35,45 @@ NoApplyOp(n::Int) = NoApplyOp(CoordinateSpace((n,)), CoordinateSpace((n,)))
     x_view = @view source[2:4]
 
     @test A * x_view == A * x
+end
+
+@testset "LinOpSelect - repeated indices" begin
+    A = LinOpSelect((3,), [CartesianIndex(2), CartesianIndex(2)])
+    @test A.index == [2, 2]
+    x = [1.0, 4.0, 2.0]
+    y = [3.0, 5.0]
+
+    @test A * x == [4.0, 4.0]
+    @test A' * y == [0.0, 8.0, 0.0]
+    @test (A' * A) * x == [0.0, 8.0, 0.0]
+    @test (A * A') * y == [8.0, 8.0]
+
+    forward = zeros(2)
+    adjoint = zeros(3)
+    @test apply_!(forward, A, x) === forward
+    @test forward == [4.0, 4.0]
+    @test apply_adjoint_!(adjoint, A, y) === adjoint
+    @test adjoint == [0.0, 8.0, 0.0]
+
+    mul!(forward, A, x)
+    @test forward == [4.0, 4.0]
+    mul!(adjoint, Base.adjoint(A), y)
+    @test adjoint == [0.0, 8.0, 0.0]
+
+    A3 = LinOpSelect((2, 2, 3), [CartesianIndex(2, 1, 2), CartesianIndex(2, 1, 2)])
+    y3 = zeros(2, 2, 3)
+    @test apply_adjoint_!(y3, A3, [3.0, 5.0]) === y3
+    @test y3[CartesianIndex(2, 1, 2)] == 8.0
+    @test count(!iszero, y3) == 1
+
+    B = LinOpSelect((3,), [CartesianIndex(1), CartesianIndex(3)])
+    @test (B' * B) * x == [1.0, 0.0, 2.0]
+    @test (B * B') * y == y
+
+    mask_select = LinOpSelect([false, true, true])
+    @test mask_select.index == [2, 3]
+    @test mask_select * x == [4.0, 2.0]
+    @test mask_select' * y == [0.0, 3.0, 5.0]
 end
 
 @testset "LinOp - generic mul! fallback via apply_" begin
