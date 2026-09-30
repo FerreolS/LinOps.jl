@@ -1,5 +1,6 @@
 """
     LinOpSelect(sz, indices)
+    LinOpSelect(sz, ranges)
     LinOpSelect(mask::AbstractArray{Bool})
     LinOpSelect(inputspace, outputspace, indices)
 
@@ -7,9 +8,11 @@ Selection operator that gathers indexed entries from its input.
 
 The shape-and-index constructor accepts a vector of linear integer indices or
 `CartesianIndex` values. It preserves their order and allows repeated indices.
+The range-tuple constructor accepts one range per input dimension and preserves
+the shape of the selected subarray.
 The boolean-mask constructor selects the `true` entries in linear order. The
 explicit-domain constructor accepts the input and output domains directly; the
-index list must have the same number of dimensions as the output domain.
+number of indices must equal the number of elements in the output domain.
 
 The adjoint scatters values back into the input domain, adding contributions
 when an index occurs more than once.
@@ -22,6 +25,10 @@ A' * [1, 2]       # [0, 3, 0]
 
 M = LinOpSelect([false, true, true])
 M * [10, 20, 30]  # [20, 30]
+
+X = reshape(1:20, 4, 5)
+S = LinOpSelect(size(X), (2:3, 2:4))
+S * X  # X[2:3, 2:4]
 ```
 """
 struct LinOpSelect{I, O, D} <: LinOp{I, O}
@@ -29,7 +36,7 @@ struct LinOpSelect{I, O, D} <: LinOp{I, O}
     outputspace::O
     index::D
     function LinOpSelect(inputspace::I, outputspace::O, list::D) where {D, I <: AbstractDomain, O <: AbstractDomain}
-        ndims(list) == ndims(outputspace) || throw(ArgumentError("Index list must have the same number of dimensions as the output space"))
+        length(list) == length(outputspace) || throw(ArgumentError("Index list length must match the number of elements in the output space"))
         linear_index = _linopselect_linear_indices(inputspace, list)
         return new{I, O, typeof(linear_index)}(inputspace, outputspace, linear_index)
     end
@@ -39,6 +46,16 @@ _linopselect_linear_indices(inputspace, index::AbstractArray{<:CartesianIndex}) 
 _linopselect_linear_indices(inputspace, index::AbstractArray{<:Integer}) = index
 
 LinOpSelect(sz::NTuple{N, Int}, list::AbstractVector) where {N} = LinOpSelect(LinOps.CoordinateSpace(sz), LinOps.CoordinateSpace(length(list)), list)
+
+function LinOpSelect(sz::NTuple{N, Int}, ranges::Tuple) where {N}
+    length(ranges) == N || throw(ArgumentError("One range is required for each input dimension"))
+    all(range -> range isa AbstractRange, ranges) || throw(ArgumentError("Selection indices must be ranges"))
+
+    output_size = map(length, ranges)
+    linear_indices = LinearIndices(sz)
+    index = [linear_indices[I] for I in CartesianIndices(ranges)]
+    return LinOpSelect(LinOps.CoordinateSpace(sz), LinOps.CoordinateSpace(output_size), index)
+end
 
 function LinOpSelect(selected::AbstractArray{Bool, N}) where {N}
     sz = size(selected)

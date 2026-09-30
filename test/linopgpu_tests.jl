@@ -40,6 +40,13 @@ using LinOps: LinOp, LinOpDiag, LinOpGrad, LinOpMapslice, LinOpSelect, inputsize
 
     y_integer = JLArray(Int16[3, 5, 7])
     @test Array(adjoint(A) * y_integer) == Int16[0 7; 8 0]
+
+    source = JLArray(reshape(Float32.(1:20), 4, 5))
+    subarray_select = LinOpSelect(size(source), (2:3, 2:4))
+    @test Array(subarray_select * source) == Array(source)[2:3, 2:4]
+    expected_adjoint = zeros(Float32, 4, 5)
+    expected_adjoint[2:3, 2:4] .= Array(subarray_select * source)
+    @test Array(adjoint(subarray_select) * (subarray_select * source)) == expected_adjoint
 end
 
 @testset "LinOpDiag - GPU arrays" begin

@@ -75,6 +75,16 @@ end
     @test mask_select.index == [2, 3]
     @test mask_select * x == [4.0, 2.0]
     @test mask_select' * y == [0.0, 3.0, 5.0]
+
+    source = reshape(collect(1:20), 4, 5)
+    subarray_select = LinOpSelect(size(source), (2:3, 2:4))
+    @test outputsize(subarray_select) == (2, 3)
+    @test subarray_select * source == source[2:3, 2:4]
+
+    selected_values = reshape(collect(1.0:6.0), 2, 3)
+    expected_adjoint = zeros(4, 5)
+    expected_adjoint[2:3, 2:4] .= selected_values
+    @test subarray_select' * selected_values == expected_adjoint
 end
 
 @testset "LinOp - generic mul! fallback via apply_" begin
