@@ -1,6 +1,6 @@
 using LinearAlgebra: mul!
 using SparseArrays: sparse
-using LinOps: LinOp, LinOpSparse, CoordinateSpace, inputspace, outputspace, inputsize, outputsize
+using LinOps: LinOp, LinOpSparse, CoordinateSpace, inputspace, outputspace, inputsize, outputsize, verify_adjoint, verify_adjoint_composition
 
 @testset "LinOpSparse - properties and forward application" begin
     matrix = sparse(
@@ -39,6 +39,8 @@ end
     @test mul!(y, A', x) === y
     @test y == expected
     @test A'' == A
+    @test verify_adjoint(A)
+    @test verify_adjoint_composition(A)
 end
 
 @testset "LinOpSparse - dimension and domain validation" begin

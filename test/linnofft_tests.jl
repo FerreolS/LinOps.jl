@@ -2,7 +2,7 @@ using Random
 using LinearAlgebra: dot, mul!
 using Adapt
 using NonuniformFFTs
-using LinOps: LinOpNFFT, LinOp, CoordinateSpace, inputspace, outputspace, inputsize, outputsize, isendomorphism, outputtype
+using LinOps: LinOpNFFT, LinOp, CoordinateSpace, inputspace, outputspace, inputsize, outputsize, isendomorphism, outputtype, verify_adjoint_composition
 
 @testset "LinOpNFFT - 1D Float32 construction" begin
     Random.seed!(1)
@@ -146,6 +146,7 @@ end
     y_hat = NF * x                               # ComplexF32
     x_rt = NF' * y_hat                          # Float32
     @test size(x_rt) == size(x)
+    @test verify_adjoint_composition(NF)
 
     # consistency: two calls give same result
     @test NF * x ≈ NF * x

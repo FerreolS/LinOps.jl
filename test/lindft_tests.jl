@@ -2,7 +2,7 @@ using Random
 using LinearAlgebra: dot, mul!
 using Adapt
 using FFTW
-using LinOps: LinOpDFT, LinOpDiag, LinOp, CoordinateSpace, inputspace, outputspace, inputsize, outputsize, outputtype, isendomorphism
+using LinOps: LinOpDFT, LinOpDiag, LinOp, CoordinateSpace, inputspace, outputspace, inputsize, outputsize, outputtype, isendomorphism, verify_adjoint, verify_adjoint_composition
 
 @testset "LinOpDFT - Real to complex 1D" begin
     N = 16
@@ -79,6 +79,8 @@ end
     x = randn(ComplexF64, N)
     y = randn(ComplexF64, N)
     @test dot(F * x, y) ≈ dot(x, F' * y)
+    @test verify_adjoint(F)
+    @test verify_adjoint_composition(F)
 
     # F * F' = N * I
     @test F * F' == N * I

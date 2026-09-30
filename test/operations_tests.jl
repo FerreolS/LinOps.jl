@@ -1,5 +1,5 @@
 using LinearAlgebra: I, UniformScaling, mul!
-using LinOps: LinOp, LinOpDiag, CoordinateSpace, inputspace, outputspace, outputtype
+using LinOps: LinOp, LinOpDiag, CoordinateSpace, inputspace, outputspace, outputtype, verify_adjoint, verify_adjoint_composition
 import LinOps: apply_, apply_!, apply_adjoint_, apply_adjoint_!
 
 struct ScaleOp{I, O} <: LinOp{I, O}
@@ -157,6 +157,8 @@ end
     @test AB' * x == B' * (A' * x)
     @test ABC' * x == C' * (B' * (A' * x))
     @test mixed' * x == 2.0 .* (B' * (A' * x))
+    @test verify_adjoint(ABC)
+    @test verify_adjoint_composition(ABC)
 end
 
 @testset "Operations - LinOpSum and mixed divide/solve overloads" begin
@@ -189,6 +191,8 @@ end
 
     @test @inferred(A * x) == [2.0, 6.0, 12.0]
     @test @inferred(S * x) == (A * x) + (B * x)
+    @test verify_adjoint(S)
+    @test verify_adjoint_composition(S)
 end
 
 @testset "Operations - LinOpSum constructor message checks" begin

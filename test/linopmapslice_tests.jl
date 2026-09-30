@@ -1,5 +1,5 @@
 using LinearAlgebra: mul!
-using LinOps: LinOpMapslice, LinOpDiag, inputsize, outputsize
+using LinOps: LinOpMapslice, LinOpDiag, inputsize, outputsize, verify_adjoint, verify_adjoint_composition
 
 @testset "LinOpMapslice - single LinOp operator" begin
     sz = (2, 5, 3)
@@ -45,6 +45,8 @@ end
     y2 = similar(x)
     mul!(y2, M', x)
     @test y2 ≈ expected
+    @test verify_adjoint(M)
+    @test verify_adjoint_composition(M)
 end
 
 @testset "LinOpMapslice - array of LinOp operators" begin

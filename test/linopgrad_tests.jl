@@ -1,6 +1,6 @@
 using Test
 using LinearAlgebra: mul!
-using LinOps: LinOp, LinOpGrad, CoordinateSpace, inputsize, outputsize, inputspace, outputspace
+using LinOps: LinOp, LinOpGrad, CoordinateSpace, inputsize, outputsize, inputspace, outputspace, verify_adjoint, verify_adjoint_composition
 
 @testset "LinOpGrad - public constructor cascade" begin
     space = CoordinateSpace((5, 4))
@@ -88,6 +88,8 @@ end
     rhs = sum(x .* (A' * y))
 
     @test lhs ≈ rhs rtol = 1.0e-12 atol = 1.0e-12
+    @test verify_adjoint(A)
+    @test verify_adjoint_composition(A)
 end
 
 @testset "LinOpGrad - Custom offsets " begin

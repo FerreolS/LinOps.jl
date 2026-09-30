@@ -1,5 +1,5 @@
 using LinearAlgebra: I, UniformScaling, mul!
-using LinOps: LinOp, LinOpDiag, LinOpSelect, CoordinateSpace, inputsize, outputsize, inputspace, outputspace, verify_adjoint
+using LinOps: LinOp, LinOpDiag, LinOpSelect, CoordinateSpace, inputsize, outputsize, inputspace, outputspace, verify_adjoint, verify_adjoint_composition
 import LinOps: apply_, apply_!, apply_adjoint_, apply_adjoint_!
 
 struct ApplyOnlyOp <: LinOp{CoordinateSpace{Number, 1, AbstractArray}, CoordinateSpace{Number, 1, AbstractArray}}
@@ -45,6 +45,7 @@ end
 
     @test A * x == [4.0, 4.0]
     @test A' * y == [0.0, 8.0, 0.0]
+    @test verify_adjoint(A)
     @test (A' * A) * x == [0.0, 8.0, 0.0]
     @test (A * A') * y == [8.0, 8.0]
 
@@ -189,6 +190,8 @@ end
 
 @testset "LinOp - adjoint verification utility" begin
     @test verify_adjoint(LinOpDiag([1.0, 2.0, 3.0]))
+    @test verify_adjoint_composition(LinOpDiag([1.0, 2.0, 3.0]))
+    @test verify_adjoint_composition(LinOpSelect((3,), [CartesianIndex(2), CartesianIndex(2)]))
 end
 
 @testset "LinOp - error messages and adjoint forwarding methods" begin

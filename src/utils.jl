@@ -9,6 +9,20 @@ function verify_adjoint(A::LinOp)
     return dot(y, A * x) ≈ dot(A'y, x)
 end
 
+"""
+    verify_adjoint_composition(H::LinOp)
+
+Check whether `(H' * H) * x` agrees with `H' * (H * x)` and `(H * H') * y`
+agrees with `H * (H' * y)` for random `x` and `y` in the input and output
+spaces of `H`.
+"""
+function verify_adjoint_composition(H::LinOp)
+    x = randn(inputspace(H))
+    y = randn(outputspace(H))
+    return ((H' * H) * x ≈ H' * (H * x)) && ((H * H') * y ≈ H * (H' * y))
+end
+
+
 @inline function _wait_or_sync(backend, evt)
     if evt === nothing
         applicable(synchronize, backend) && synchronize(backend)

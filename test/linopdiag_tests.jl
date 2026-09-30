@@ -2,6 +2,7 @@ using LinearAlgebra: I, UniformScaling, mul!
 using FixedSizeArrays: FixedSizeArrayDefault
 using Adapt: adapt
 using LinOps: LinOp, LinOpDiag, CoordinateSpace, inputspace, outputspace, inputsize, outputsize, isendomorphism, ⊂
+using LinOps: verify_adjoint, verify_adjoint_composition
 
 @testset "LinOpDiag - Basic LinOp properties" begin
     d = [2.0 3.0; 4.0 5.0]
@@ -75,6 +76,8 @@ end
     @test y == conj.(d) .* x
 
     @test A'' == A
+    @test verify_adjoint(A)
+    @test verify_adjoint_composition(A)
 end
 
 @testset "LinOpDiag - Operations from Operations.jl" begin
