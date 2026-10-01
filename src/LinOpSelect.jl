@@ -132,34 +132,34 @@ end
 
 @kernel function linopselect_scatter_add_kernel!(Y, X, index)
     j = @index(Global, Linear)
-    KernelAbstractions.@atomic Y[index[j]] += X[j]
+    @inbounds KernelAbstractions.@atomic Y[index[j]] += X[j]
 end
 
 @kernel function linopselect_gather_kernel!(Y, X, index)
     j = @index(Global, Linear)
-    Y[j] = X[index[j]]
+    @inbounds Y[j] = X[index[j]]
 end
 
 @kernel function linopselect_complex_scatter_add_kernel!(Yreal, Yimag, X, index)
     j = @index(Global, Linear)
-    KernelAbstractions.@atomic Yreal[index[j]] += real(X[j])
-    KernelAbstractions.@atomic Yimag[index[j]] += imag(X[j])
+    @inbounds KernelAbstractions.@atomic Yreal[index[j]] += real(X[j])
+    @inbounds KernelAbstractions.@atomic Yimag[index[j]] += imag(X[j])
 end
 
 @kernel function linopselect_complex_combine_kernel!(Y, Yreal, Yimag)
     i = @index(Global, Linear)
-    Y[i] = complex(Yreal[i], Yimag[i])
+    @inbounds Y[i] = complex(Yreal[i], Yimag[i])
 end
 
 @kernel function linopselect_reduce_scatter_kernel!(Y, X, index)
     i = @index(Global, Linear)
     value = zero(eltype(Y))
-    for j in eachindex(index)
+    @inbounds for j in eachindex(index)
         if index[j] == i
             value += X[j]
         end
     end
-    Y[i] = value
+    @inbounds    Y[i] = value
 end
 
 function Base.:*(left::D, right::LinOpAdjoint{O, I, D}) where {I, O, D <: LinOpSelect}
