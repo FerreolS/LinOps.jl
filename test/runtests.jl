@@ -3,6 +3,7 @@ using LinOps: AbstractDomain, CoordinateSpace
 using ExplicitImports
 
 using FFTW
+using InterpolationKernels
 using NonuniformFFTs
 
 using Test
@@ -10,6 +11,7 @@ using Test
     include("domain_tests.jl")
     include("linop_tests.jl")
     include("linopsparse_tests.jl")
+    include("linopinterpolator_tests.jl")
     include("operations_tests.jl")
     include("linopmapslice_tests.jl")
     include("linopdiag_tests.jl")

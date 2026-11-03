@@ -22,7 +22,7 @@ using KernelAbstractions: @index, @kernel, get_backend, synchronize
 using LinearAlgebra: I, UniformScaling, diag, dot
 import LinearAlgebra: mul!
 import Random
-using SparseArrays: AbstractSparseMatrix
+using SparseArrays: AbstractSparseMatrix, sparse
 using StaticArrays: SVector
 using TypeUtils: adapt_precision, parameterless
 
@@ -37,6 +37,7 @@ export I,
     LinOpDFT,
     LinOpDiag,
     LinOpGrad,
+    LinOpInterpolator,
     LinOpSparse,
     LinOpMapslice,
     LinOpNFFT,
@@ -63,5 +64,6 @@ include("LinOpGrad.jl")
 include("LinOpDFT.jl")
 include("LinOpMapslice.jl")
 include("LinOpSparse.jl")
+include("LinOpInterpolator.jl")
 
 end
