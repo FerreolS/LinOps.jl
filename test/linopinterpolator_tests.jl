@@ -7,7 +7,7 @@ using LinOps: LinOpInterpolator, verify_adjoint
     knots = 0.0:0.5:4.0
     x = sin.(knots)
     p = [0.1 1.3; 2.2 5.0; -1.0 3.5]
-    Ls = LinOpInterpolator(knots, p)
+    Ls = LinOpInterpolator(knots, p; sparse = true)
     @test Ls isa LinOps.LinOpSparse
     Lf = LinOpInterpolator(knots, p; sparse = false)
     @test Ls * x ≈ Lf * x

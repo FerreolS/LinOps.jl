@@ -1,7 +1,38 @@
 using GPUArrays
+using Adapt: adapt
 using JLArrays
+using KernelAbstractions: get_backend
 using LinearAlgebra: mul!
-using LinOps: LinOp, LinOpDiag, LinOpGrad, LinOpMapslice, LinOpSelect, inputsize, outputsize, CoordinateSpace, inputspace, outputspace
+using LinOps: LinOp, LinOpDiag, LinOpGrad, LinOpInterpolator, LinOpMapslice, LinOpSelect, inputsize, outputsize, CoordinateSpace, inputspace, outputspace
+
+@testset "LinOpInterpolator - GPU arrays" begin
+    knots = 0.0f0:0.5f0:4.0f0
+    positions = [0.1f0 1.3f0; 2.2f0 5.0f0; -1.0f0 3.5f0]
+    A = LinOpInterpolator(knots, positions; sparse = false)
+    x_cpu = sin.(knots)
+    x_gpu = JLArray(x_cpu)
+    expected = A * x_cpu
+    y_gpu = similar(x_gpu, eltype(expected), size(expected))
+
+    A_gpu = adapt(JLArray, A)
+    @test LinOps.apply_!(y_gpu, A_gpu, x_gpu) === y_gpu
+    @test Array(y_gpu) ≈ expected
+    @test Array(A_gpu * x_gpu) ≈ expected
+    y_cpu = randn(Float32, size(positions))
+    y_input = JLArray(y_cpu)
+    adjoint_expected = A' * y_cpu
+    adjoint_output = similar(x_gpu)
+    @test LinOps.apply_adjoint_!(adjoint_output, A_gpu, y_input) === adjoint_output
+    @test Array(adjoint_output) ≈ adjoint_expected
+    @test Array(A_gpu' * y_input) ≈ adjoint_expected
+
+    empty_A = adapt(JLArray, LinOpInterpolator(knots, Float32[]; sparse = false))
+    empty_y = JLArray(Float32[])
+    @test LinOps.apply_!(empty_y, empty_A, x_gpu) === empty_y
+    empty_adjoint = similar(x_gpu)
+    @test LinOps.apply_adjoint_!(empty_adjoint, empty_A, empty_y) === empty_adjoint
+    @test Array(empty_adjoint) == zeros(Float32, length(knots))
+end
 
 @testset "LinOpSelect - repeated indices on GPU" begin
     A = LinOpSelect((2, 2), [CartesianIndex(2, 1), CartesianIndex(2, 1), CartesianIndex(1, 2)])

@@ -29,7 +29,7 @@ struct LinOpInterpolator{I, O, R <: AbstractRange, P, K} <: LinOp{I, O}
 end
 
 function LinOps.LinOpInterpolator(
-        knots::AbstractRange{T}, p::AbstractArray, kernel::Kernel = CatmullRomSpline{T}(); sparse::Bool = true
+        knots::AbstractRange{T}, p::AbstractArray, kernel::Kernel = CatmullRomSpline{T}(); sparse::Bool = false
     ) where {T}
     Base.require_one_based_indexing(p)
     positions = vec(p)
@@ -71,20 +71,52 @@ function interpolation_matrix(knots, positions, kernel)
     return sparse(L, C, V, length(positions), length(knots))
 end
 
-function LinOps.apply_!(y, A::LinOpInterpolator{I, O, R, P, K}, x) where {I, O, R, P, K}
-    fill!(y, zero(eltype(y)))
-    ry, rx = reshape(y, :), reshape(x, :)
-    foreach_interpolation_weight(A.knots, A.positions, A.kernel) do l, j, v
-        ry[l] += v * rx[j]
-    end
+function LinOps.apply_!(y, (; positions, knots, kernel)::LinOpInterpolator, x)
+    backend = get_backend(positions)
+    evt = linopinterpolator_apply_kernel!(backend)(
+        vec(y), vec(x), positions, first(knots), step(knots), kernel, length(knots);
+        ndrange = length(positions),
+    )
+    _wait_or_sync(backend, evt)
     return y
 end
 
-function LinOps.apply_adjoint_!(y, A::LinOpInterpolator{I, O, R, P, K}, x) where {I, O, R, P, K}
-    fill!(y, zero(eltype(y)))
-    ry, rx = reshape(y, :), reshape(x, :)
-    foreach_interpolation_weight(A.knots, A.positions, A.kernel) do l, j, v
-        ry[j] += v * rx[l]
+
+@kernel function linopinterpolator_apply_kernel!(Y, X, positions, first_knot, knot_step, kernel, nknots)
+    l = @index(Global, Linear)
+    u = (positions[l] - first_knot) / knot_step + one(first_knot)
+    jfirst = floor(Int, u - length(kernel) / 2) + 1
+    jlast = floor(Int, u + length(kernel) / 2)
+    value = zero(eltype(Y))
+    for j in jfirst:jlast
+        index = clamp(j, 1, nknots)
+        value += kernel(u - j) * X[index]
     end
+    Y[l] = value
+end
+
+function LinOps.apply_adjoint_!(y, (; positions, knots, kernel)::LinOpInterpolator, x)
+    backend = get_backend(positions)
+    evt = linopinterpolator_adjoint_kernel!(backend)(
+        vec(y), vec(x), positions, first(knots), step(knots), kernel, length(knots);
+        ndrange = length(y),
+    )
+    _wait_or_sync(backend, evt)
     return y
+end
+
+@kernel function linopinterpolator_adjoint_kernel!(Y, X, positions, first_knot, knot_step, kernel, nknots)
+    j = @index(Global, Linear)
+    value = zero(eltype(Y))
+    for l in eachindex(positions)
+        u = (positions[l] - first_knot) / knot_step + one(first_knot)
+        jfirst = floor(Int, u - length(kernel) / 2) + 1
+        jlast = floor(Int, u + length(kernel) / 2)
+        for sample in jfirst:jlast
+            if clamp(sample, 1, nknots) == j
+                value += kernel(u - sample) * X[l]
+            end
+        end
+    end
+    Y[j] = value
 end
